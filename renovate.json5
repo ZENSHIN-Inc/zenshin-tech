@@ -1,0 +1,26 @@
+{
+  // Renovate 設定ファイル（zenshin-hp の方針に準拠した簡易版）
+  // https://docs.renovatebot.com/configuration-options/
+  //
+  // バリデーション:
+  //   コマンド: bunx -y -p renovate@latest renovate-config-validator --strict renovate.json5
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+
+  configMigration: false,
+
+  // "config:best-practices" により GitHub Actions は digest でピン留めされ、
+  // 更新 PR も digest ごと自動で作られる（Actions を常に最新に保つ）
+  extends: ["config:best-practices"],
+
+  rangeStrategy: "replace",
+
+  timezone: "Asia/Tokyo",
+
+  packageRules: [
+    // マイナー・パッチ・digest 更新は自動マージ（main へ push されれば Pages も自動再デプロイ）
+    {
+      matchUpdateTypes: ["minor", "patch", "pin", "pinDigest", "digest"],
+      automerge: true,
+    },
+  ],
+}

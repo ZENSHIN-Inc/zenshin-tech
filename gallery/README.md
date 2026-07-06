@@ -1,0 +1,24 @@
+# gallery/ — CG・生成画像の公開素材
+
+ここに画像を置いて main に push すると、自動で以下に公開されます。
+
+- 一覧ページ: https://zenshin-inc.github.io/zenshin-contents/gallery/
+- 直リンク: `https://zenshin-inc.github.io/zenshin-contents/gallery/<フォルダ名>/<ファイル名>`
+
+## 命名規則
+
+```
+gallery/<YYYYMM>-<slug>/xxx.png
+```
+
+- 1 案件・1 テーマにつき 1 フォルダ（例: `202607-ai-seminar/`）
+- フォルダ名は「年月 + 内容がわかる英数字スラッグ」
+- 対応拡張子: png / jpg / jpeg / webp / gif / svg
+- `gallery/` 直下に直接画像を置かない（必ずフォルダを切る）
+
+## 画像サイズの扱い
+
+自動リサイズは行わず **そのまま公開** します。置く前に以下を目安に調整してください。
+
+- 1 ファイル **5MB 以下**、長辺 **2400px 以下** を推奨
+- リポジトリ肥大化を防ぐため、動画・PSD などの作業ファイルは置かない（公開する完成画像のみ）

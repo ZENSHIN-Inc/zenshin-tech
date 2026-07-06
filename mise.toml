@@ -1,0 +1,7 @@
+# ツールバージョン管理
+# mise install で必要なツールが自動インストールされる
+[tools]
+# marp-cli のランタイム（bunx は shebang を尊重して node で実行する）
+node = "26"
+# パッケージマネージャ兼ビルドスクリプトランナー
+bun = "latest"
