@@ -1,18 +1,24 @@
 /* @theme zenshin */
 /*
- * ZENSHIN ブランドテーマ v2
+ * ZENSHIN ブランドテーマ v2.1
  * - 配色は zenshin-hp に準拠: ブランドの黒 #0c1220 × ゴールド #c4a97d、アクセントブルー #0969da
  * - 背景は温かみのある紙色（gallery の手書き風挿絵のベージュと調和する）
  * - 見出しは 900 ウェイトで級差を大きく、アクセント色はゴールドのみに絞る
+ *   （見出し下の短いゴールドバーは v2.1 で廃止 — 生成 AI 定番の装飾に見えるため）
  * - 日本語フォント: Noto Sans JP（Web 表示は Google Fonts、PDF ビルドは CI にインストールした Noto CJK にフォールバック）
  *
  * レイアウト部品（Markdown 内に HTML で記述する。ビルドは --html 有効）:
+ *   <!-- _class: center -->                      … 結論・メッセージ主体のページを中央揃えに
+ *                                                   （箇条書き・コールアウトは左揃えを維持する）
  *   <div class="columns"> A / B </div>          … 2 カラム（<div class="columns three"> で 3 カラム）
  *   <div class="card"> ### 見出し + 本文 </div>  … ゴールドトップボーダーのカード
  *   <div class="stats">
  *     <div class="stat"><div class="num">$200</div><div class="label">説明</div></div>
  *   </div>                                       … 大きな数字の KPI タイル（横に自動で並ぶ）
- *   blockquote（> 行）                           … 「POINT」ラベル付きコールアウト
+ *   blockquote（> 行）                           … 「POINT」ラベル付きコールアウト（ゴールド）
+ *   <div class="callout good|warn|danger|info">  … 色付きコールアウト
+ *     good=GOOD(緑・良い点) / warn=CAUTION(黄・注意) / danger=WARNING(赤・危険) / info=INFO(青・補足)
+ *     ラベル文字列は data-label="..." で上書き可能
  */
 
 @import 'default';
@@ -46,7 +52,7 @@ section {
   letter-spacing: 0.02em;
 }
 
-/* 見出し: 900 ウェイトで大きく。下線ボーダーではなく短いゴールドバー */
+/* 見出し: 900 ウェイトで大きく。下線・バーなどの装飾は付けない */
 section h1 {
   font-size: 1.76em;
   font-weight: 900;
@@ -54,16 +60,6 @@ section h1 {
   color: var(--zenshin-ink);
   letter-spacing: 0.01em;
   margin-bottom: 0.55em;
-}
-
-section h1::after {
-  content: '';
-  display: block;
-  width: 64px;
-  height: 6px;
-  background: var(--zenshin-gold);
-  border-radius: 3px;
-  margin-top: 12px;
 }
 
 section h2 {
@@ -91,8 +87,10 @@ section strong {
   background: linear-gradient(transparent 62%, var(--zenshin-gold-light) 62%);
 }
 
-/* コールアウト（blockquote）: POINT ラベル付きカード */
-section blockquote {
+/* コールアウト: blockquote（> 行）は POINT（ゴールド）。
+   <div class="callout good|warn|danger|info"> で意味に応じた色バリエーション */
+section blockquote,
+section .callout {
   position: relative;
   border: 1px solid var(--zenshin-border);
   border-left: 6px solid var(--zenshin-gold);
@@ -105,7 +103,8 @@ section blockquote {
   box-shadow: 0 1px 4px rgba(12, 18, 32, 0.05);
 }
 
-section blockquote::before {
+section blockquote::before,
+section .callout::before {
   content: 'POINT';
   display: block;
   font-size: 0.58em;
@@ -113,6 +112,64 @@ section blockquote::before {
   letter-spacing: 0.22em;
   color: var(--zenshin-gold-deep);
   margin-bottom: 0.3em;
+}
+
+section .callout > p {
+  margin: 0.2em 0;
+}
+
+section .callout > ul,
+section .callout > ol {
+  margin: 0.2em 0;
+}
+
+/* 良い点・推奨（緑） */
+section .callout.good {
+  border-left-color: #2da44e;
+  background: #f3f9f2;
+}
+
+section .callout.good::before {
+  content: 'GOOD';
+  color: #1a7f37;
+}
+
+/* 注意（黄） */
+section .callout.warn {
+  border-left-color: #d4a72c;
+  background: #fdf8e7;
+}
+
+section .callout.warn::before {
+  content: 'CAUTION';
+  color: #9a6700;
+}
+
+/* 危険・非推奨（赤） */
+section .callout.danger {
+  border-left-color: #cf222e;
+  background: #fcf1f0;
+}
+
+section .callout.danger::before {
+  content: 'WARNING';
+  color: #cf222e;
+}
+
+/* 補足情報（青） */
+section .callout.info {
+  border-left-color: var(--zenshin-blue);
+  background: #eff5fd;
+}
+
+section .callout.info::before {
+  content: 'INFO';
+  color: var(--zenshin-blue);
+}
+
+/* ラベル文字列の上書き（例: <div class="callout info" data-label="MEMO">） */
+section .callout[data-label]::before {
+  content: attr(data-label);
 }
 
 /* コード */
@@ -137,11 +194,11 @@ section pre code {
   padding: 0;
 }
 
-/* テーブル: 軽いヘッダー + ゼブラ */
+/* テーブル: 軽いヘッダー + ゼブラ。直後のテキストが詰まって見えないよう下に余白を取る */
 section table {
   font-size: 0.9em;
   border-collapse: collapse;
-  margin: 0.3em auto;
+  margin: 0.3em auto 1em;
 }
 
 section table th {
@@ -191,6 +248,23 @@ section:not(.lead) p img:not(.emoji) {
 }
 
 /* ---- レイアウト部品 ---------------------------------------------------- */
+
+/* 中央揃えページ（<!-- _class: center -->）: 結論・メッセージ主体のページ用。
+   箇条書きは可読性のため左揃えを維持する（ブロックごと中央に寄せる） */
+section.center {
+  text-align: center;
+}
+
+section.center ul,
+section.center ol {
+  display: inline-block;
+  text-align: left;
+}
+
+section.center blockquote,
+section.center .callout {
+  text-align: left;
+}
 
 section .columns {
   display: grid;
@@ -276,20 +350,17 @@ section.lead {
 }
 
 section.lead h1 {
-  font-size: 2.2em;
+  font-size: 2.6em;
   color: #ffffff;
   line-height: 1.35;
 }
 
-section.lead h1::after {
-  width: 3em;
-  height: 5px;
-  margin: 0.45em auto 0;
-}
-
+/* サブタイトル: 表紙の「読ませたい一文」なので本文よりしっかり大きく */
 section.lead h2 {
+  font-size: 1.5em;
+  line-height: 1.5;
   color: #d7dde6;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 section.lead p,
