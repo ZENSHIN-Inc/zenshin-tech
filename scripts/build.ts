@@ -1,15 +1,16 @@
 /**
  * ビルドスクリプト（bun scripts/build.ts で実行）
  *
- * 1. slides/*.md を marp-cli で HTML / PDF / サムネイル PNG に変換して dist/slides/ へ出力
+ * 1. slides/*.md を marp-cli（Node API）で HTML / PDF / サムネイル PNG に変換して dist/slides/ へ出力
+ *    - HTML はデッキごとに変換し、frontmatter の title / description から OGP メタを注入する
  * 2. assets/（ブランド素材）と gallery/ 配下の画像を dist/ へコピー
  * 3. デッキ一覧（dist/index.html）とギャラリー一覧（dist/gallery/index.html）を生成
  */
 
-import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { marpCli } from "@marp-team/marp-cli";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SLIDES_DIR = path.join(ROOT, "slides");
@@ -19,7 +20,20 @@ const DIST = path.join(ROOT, "dist");
 
 const SITE_TITLE = "ZENSHIN Contents";
 const SITE_DESCRIPTION = "ZENSHIN のスライド・CG などを公開するコンテンツハブ";
+const SITE_ORIGIN = "https://contents.zenshin-inc.co.jp";
 const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"]);
+
+// marp-cli は process.cwd() 基準でパスを解決する
+process.chdir(ROOT);
+
+/** marp-cli を Node API で実行する。非 0 終了はエラーにする */
+async function marp(args: string[]): Promise<void> {
+  const exitCode = await marpCli(args);
+  if (exitCode !== 0) throw new Error(`marp-cli exited with code ${exitCode}: marp ${args.join(" ")}`);
+}
+
+// テーマのレイアウト部品（.columns / .card / .stats）を Markdown 内の HTML で使えるよう --html を有効にする
+const MARP_COMMON_ARGS = ["--theme-set", "themes", "--allow-local-files", "--no-config-file", "--html"];
 
 interface Deck {
   base: string;
@@ -54,17 +68,6 @@ const slideFiles = fs.existsSync(SLIDES_DIR)
       .reverse()
   : [];
 
-if (slideFiles.length > 0) {
-  // bunx は marp-cli の shebang（node）を尊重するため、実行ランタイムは Node.js
-  const marp = "bunx marp --input-dir slides -o dist/slides --theme-set themes --allow-local-files --no-config-file";
-  console.log("Building HTML...");
-  execSync(marp, { cwd: ROOT, stdio: "inherit" });
-  console.log("Building PDF...");
-  execSync(`${marp} --pdf`, { cwd: ROOT, stdio: "inherit" });
-  console.log("Building thumbnails...");
-  execSync(`${marp} --image png --image-scale 1`, { cwd: ROOT, stdio: "inherit" });
-}
-
 // ---------------------------------------------------------------------------
 // 2. スライドのメタ情報を収集
 // ---------------------------------------------------------------------------
@@ -98,7 +101,38 @@ const decks: Deck[] = slideFiles.map((file) => {
 });
 
 // ---------------------------------------------------------------------------
-// 3. ギャラリーのコピーと画像収集
+// 3. Marp ビルド
+// ---------------------------------------------------------------------------
+
+if (decks.length > 0) {
+  // HTML はデッキごとに変換し、OGP メタ（og:title / og:description / og:image / og:url）を注入する。
+  // og:image には後続のサムネイル生成で作る 1 ページ目 PNG を使う
+  console.log("Building HTML...");
+  for (const deck of decks) {
+    await marp([
+      path.join("slides", `${deck.base}.md`),
+      "-o",
+      path.join("dist", "slides", `${deck.base}.html`),
+      ...MARP_COMMON_ARGS,
+      "--title",
+      deck.title,
+      ...(deck.description ? ["--description", deck.description] : []),
+      "--url",
+      `${SITE_ORIGIN}/slides/${deck.base}.html`,
+      "--og-image",
+      `${SITE_ORIGIN}/slides/${deck.base}.png`,
+    ]);
+  }
+
+  // PDF・サムネイルは OGP が不要なので一括変換（marp-cli が並列処理する）
+  console.log("Building PDF...");
+  await marp(["--input-dir", "slides", "-o", "dist/slides", ...MARP_COMMON_ARGS, "--pdf"]);
+  console.log("Building thumbnails...");
+  await marp(["--input-dir", "slides", "-o", "dist/slides", ...MARP_COMMON_ARGS, "--image", "png", "--image-scale", "1"]);
+}
+
+// ---------------------------------------------------------------------------
+// 4. ギャラリーのコピーと画像収集
 // ---------------------------------------------------------------------------
 
 /** gallery/<YYYYMM>-<slug>/ 配下の画像を { group, files } の配列で返す */
@@ -129,7 +163,7 @@ for (const { group, files } of galleryGroups) {
 }
 
 // ---------------------------------------------------------------------------
-// 4. HTML 生成
+// 5. 一覧ページ生成
 // ---------------------------------------------------------------------------
 
 function escapeHtml(text: string): string {
