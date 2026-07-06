@@ -26,10 +26,21 @@ const IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".sv
 // marp-cli は process.cwd() 基準でパスを解決する
 process.chdir(ROOT);
 
-/** marp-cli を Node API で実行する。非 0 終了はエラーにする */
+/** marp-cli を Node API で実行する。非 0 終了はエラーにする。
+ * PDF・サムネイル変換はローカル負荷次第で Chrome の CDP タイムアウト
+ * （Target.closeTarget timed out 等）で稀に落ちるため、1 回だけリトライする */
 async function marp(args: string[]): Promise<void> {
-  const exitCode = await marpCli(args);
-  if (exitCode !== 0) throw new Error(`marp-cli exited with code ${exitCode}: marp ${args.join(" ")}`);
+  const attempts = 2;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const exitCode = await marpCli(args);
+      if (exitCode !== 0) throw new Error(`marp-cli exited with code ${exitCode}: marp ${args.join(" ")}`);
+      return;
+    } catch (error) {
+      if (i === attempts) throw error;
+      console.warn(`marp-cli が失敗したためリトライします: marp ${args.join(" ")}`);
+    }
+  }
 }
 
 // テーマのレイアウト部品（.columns / .card / .stats）を Markdown 内の HTML で使えるよう --html を有効にする

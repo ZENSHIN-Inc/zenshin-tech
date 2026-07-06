@@ -8,7 +8,8 @@
     "dev": "bunx marp --server --theme-set themes slides",
     "build": "bun scripts/build.ts",
     "typecheck": "tsc --noEmit",
-    "ci": "bun run typecheck && bun run build"
+    "ci": "bun run typecheck && bun run build && bun run check",
+    "check": "bun scripts/check-overflow.ts"
   },
   "repository": {
     "type": "git",
