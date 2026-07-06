@@ -3,6 +3,8 @@
 ZENSHIN のスライド・CG などを公開するコンテンツハブ（Marp + GitHub Pages）
 
 - **公開 URL**: https://contents.zenshin-inc.co.jp/
+  - 旧 URL（https://zenshin-inc.github.io/zenshin-contents/ ）からはリダイレクトされる
+  - DNS（CNAME）は zenshin-infra の Terraform で管理（ZENSHIN-Inc/zenshin-infra#92）
 - main に push すると GitHub Actions が自動でビルドして公開します（完全 CLI 運用）
 
 ## ディレクトリ構成
