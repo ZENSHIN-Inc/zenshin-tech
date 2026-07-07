@@ -49,6 +49,9 @@ section {
   font-family: 'Noto Sans JP', 'Noto Sans CJK JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
   font-size: 22px;
   line-height: 1.65;
+  /* 日本語の折り返しを文節単位に（Chromium 119+。非対応環境では単に無視される）
+     — 「ローカ/ル」「業務/設計」のような複合語の泣き別れを防ぐ */
+  word-break: auto-phrase;
   color: var(--zenshin-text);
   /* 上端 6px のブランドライン + 紙色背景（多層 background。lead は自前の背景で上書きされるためラインなし）
      ※ section::before による実装は Marp の inline SVG 内で描画されないため使わない */

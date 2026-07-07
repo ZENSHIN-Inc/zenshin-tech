@@ -26,12 +26,15 @@ description: >
   ---
   marp: true
   theme: zenshin
+  lang: ja
   paginate: true
   title: <タイトル — サブタイトル>
   description: <一覧ページに出る 1〜2 文の説明>
   footer: © ZENSHIN Inc.
   ---
   ```
+
+  `lang: ja` は必須（テーマの `word-break: auto-phrase` による**文節単位の折り返し**が効く条件。複合語の泣き別れを自動で防ぐ）
 
 - サイズはテーマ既定の **4:3（960x720）**。frontmatter に `size:` を書かない（16:9 が必要な特殊ケースのみ `size: 16:9`）
 - 推奨ページ構成: lead 表紙（`<!-- _paginate: false -->`）→「結論から」（center）→ 本文 → まとめ（center）→ lead 謝辞
