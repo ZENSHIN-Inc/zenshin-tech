@@ -406,6 +406,11 @@ section.lead strong {
   border-bottom: none;
 }
 
+/* 濃紺背景では標準の青リンクが沈むためゴールドに */
+section.lead a {
+  color: var(--zenshin-gold);
+}
+
 section.lead blockquote {
   background: rgba(255, 255, 255, 0.06);
   border-color: rgba(255, 255, 255, 0.15);

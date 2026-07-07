@@ -37,6 +37,8 @@ description: >
 - 推奨ページ構成: lead 表紙（`<!-- _paginate: false -->`）→「結論から」（center）→ 本文 → まとめ（center）→ lead 謝辞
 - **章扉ページ（lead の中扉）は作らない**（本文 10 枚規模のデッキではテンポを分断するだけ）。章の現在地は **header ディレクティブの章ラベル**で示す: 各章の先頭ページに `<!-- header: N. 章タイトル -->` を書くと以降のページ左上に小さく表示され続ける。まとめのページで `<!-- header: "" -->` を書いてクリアする
 - 表紙・謝辞のロゴ: `![w:240](../assets/brand/ZENSHIN-logo-white.webp)`（lead の濃紺背景用に白ロゴ）
+- **表紙にはロゴの下に作成日と作成者を入れる**（2 行: `YYYY年M月D日` / `ZENSHIN CTO 高橋俊`）
+- **謝辞ページに問い合わせ導線を入れる**: 相談を歓迎する一文 + `**お問い合わせ**: [www.zenshin-inc.co.jp/contact](https://www.zenshin-inc.co.jp/contact)`（lead 上のリンクはテーマがゴールドで表示）
 
 ## zenshin テーマの部品と書き方ルール
 
@@ -88,6 +90,7 @@ description: >
 
 - **挿絵（手書き風インフォグラフィック）はユーザーが明示的に依頼したときだけ**入れる。こちらから「挿絵を入れましょうか」と積極提案しない。依頼されたら姉妹スキル `slide-infographic` に従う（画像生成の作法は `gallery-image-gen`）
 - ロゴ・スクリーンショットなど挿絵以外の画像を指示されたときの Marp 記法は `references/image-patterns.md` を参照
+- **スクショ・チャートなどの引用図版は `assets/slides/<デッキ slug>/` に置く**。`gallery/` には置かない（gallery はギャラリー一覧ページに自動掲載される ZENSHIN 制作画像専用。生成する挿絵は従来どおり gallery/）
 
 ## references/（Marp 汎用リファレンス）
 
