@@ -2,8 +2,10 @@
 /* @size 4:3 960px 720px */
 /* @size 16:9 1280px 720px */
 /*
- * ZENSHIN ブランドテーマ v2.2
+ * ZENSHIN ブランドテーマ v2.4
  * - スライドサイズは 4:3（960x720）が既定。16:9 が必要な特殊ケースのみ frontmatter に `size: 16:9`
+ * - 本文 22px / line-height 1.65（v2.3 で 25px から縮小。縮小で生まれた領域は文字数を増やす余地ではなく
+ *   要素間の余白＝行間・箇条書き間・コールアウト前後に充てる設計）
  * - 配色は zenshin-hp に準拠: ブランドの黒 #0c1220 × ゴールド #c4a97d、アクセントブルー #0969da
  * - 背景は温かみのある紙色（gallery の手書き風挿絵のベージュと調和する）
  * - 見出しは 900 ウェイトで級差を大きく、アクセント色はゴールドのみに絞る
@@ -45,8 +47,8 @@ section {
   width: 960px;
   height: 720px;
   font-family: 'Noto Sans JP', 'Noto Sans CJK JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
-  font-size: 25px;
-  line-height: 1.62;
+  font-size: 22px;
+  line-height: 1.65;
   color: var(--zenshin-text);
   /* 上端 6px のブランドライン + 紙色背景（多層 background。lead は自前の背景で上書きされるためラインなし）
      ※ section::before による実装は Marp の inline SVG 内で描画されないため使わない */
@@ -57,14 +59,16 @@ section {
   letter-spacing: 0.02em;
 }
 
-/* 見出し: 900 ウェイトで大きく。下線・バーなどの装飾は付けない */
+/* 見出し: 900 ウェイトで大きく。下線・バーなどの装飾は付けない
+   h1（ページタイトル）は全ページ中央揃え・1 行厳守（全角約 20 文字まで。超えるなら言い換えで短縮） */
 section h1 {
   font-size: 1.76em;
   font-weight: 900;
   line-height: 1.3;
   color: var(--zenshin-ink);
   letter-spacing: 0.01em;
-  margin-bottom: 0.55em;
+  margin-bottom: 0.65em;
+  text-align: center;
 }
 
 section h2 {
@@ -85,11 +89,14 @@ section a {
   color: var(--zenshin-blue);
 }
 
-/* 強調: マーカーハイライト（ブランドの署名的表現） */
+/* 強調: 太字 + ゴールド下線（マーカーペンの下線風。ブランドの署名的表現）
+   ※ v2.4 で「alpha 付き linear-gradient による下半分ベタ塗りマーカー」を廃止 —
+     PDF ビューアによっては半透明グラデーションの描画が壊れてマゼンタに化けるため。
+     solid border の下線はどのビューアでも安全で、ベタ塗りより騒がしくならない */
 section strong {
   color: var(--zenshin-ink);
   font-weight: 700;
-  background: linear-gradient(transparent 62%, var(--zenshin-gold-light) 62%);
+  border-bottom: 3px solid var(--zenshin-gold);
 }
 
 /* コールアウト: blockquote（> 行）は POINT（ゴールド）。
@@ -103,7 +110,7 @@ section .callout {
   background: var(--zenshin-card);
   color: var(--zenshin-ink);
   padding: 0.75em 1.1em 0.65em;
-  margin-top: 0.9em;
+  margin-top: 1.1em;
   font-size: 0.94em;
   box-shadow: 0 1px 4px rgba(12, 18, 32, 0.05);
 }
@@ -203,7 +210,7 @@ section pre code {
 section table {
   font-size: 0.9em;
   border-collapse: collapse;
-  margin: 0.3em auto 1em;
+  margin: 0.45em auto 1.1em;
 }
 
 section table th {
@@ -217,7 +224,11 @@ section table th {
 
 section table th strong {
   color: inherit;
-  background: none;
+}
+
+/* 表中の太字は下線を付けない（セルの罫線・ゼブラ背景と重なって見づらいため、太字のみで強調） */
+section table strong {
+  border-bottom: none;
 }
 
 section table td {
@@ -234,7 +245,7 @@ section table tr:nth-child(even) td {
 /* リスト */
 section ul li,
 section ol li {
-  margin-bottom: 0.28em;
+  margin-bottom: 0.4em;
 }
 
 section ul li::marker {
@@ -345,6 +356,22 @@ section footer {
   letter-spacing: 0.08em;
 }
 
+/* 章ラベル: 章扉ページの代わりに、各章の現在地をページ左上に小さく示す。
+   デッキ側で章の先頭ページに <!-- header: N. 章名 --> を書く（まとめの直前で <!-- header: "" --> でクリア） */
+section header {
+  position: absolute;
+  top: 22px;
+  left: 64px;
+  color: var(--zenshin-muted);
+  font-size: 0.56em;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+section.lead header {
+  display: none;
+}
+
 /* ---- 表紙・章扉（class: lead） ------------------------------------------ */
 
 section.lead {
@@ -373,9 +400,10 @@ section.lead li {
   color: #d7dde6;
 }
 
+/* lead はゴールド文字だけで強調（ゴールド文字 + ゴールド下線は冗長なので下線を外す） */
 section.lead strong {
   color: var(--zenshin-gold);
-  background: none;
+  border-bottom: none;
 }
 
 section.lead blockquote {
