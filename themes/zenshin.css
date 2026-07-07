@@ -1,6 +1,9 @@
 /* @theme zenshin */
+/* @size 4:3 960px 720px */
+/* @size 16:9 1280px 720px */
 /*
- * ZENSHIN ブランドテーマ v2.1
+ * ZENSHIN ブランドテーマ v2.2
+ * - スライドサイズは 4:3（960x720）が既定。16:9 が必要な特殊ケースのみ frontmatter に `size: 16:9`
  * - 配色は zenshin-hp に準拠: ブランドの黒 #0c1220 × ゴールド #c4a97d、アクセントブルー #0969da
  * - 背景は温かみのある紙色（gallery の手書き風挿絵のベージュと調和する）
  * - 見出しは 900 ウェイトで級差を大きく、アクセント色はゴールドのみに絞る
@@ -39,6 +42,8 @@
 }
 
 section {
+  width: 960px;
+  height: 720px;
   font-family: 'Noto Sans JP', 'Noto Sans CJK JP', 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
   font-size: 25px;
   line-height: 1.62;

@@ -2,7 +2,7 @@
 //
 // dist/slides/*.html を headless Chrome で開き、各ページ（Marp の inline SVG 内の section）の
 // scrollHeight と clientHeight を比較して「領域外にあふれたページ」を機械判定する。
-// Marp のスライドは固定領域（1280x720）なので、あふれた本文は静かに見切れる——
+// Marp のスライドは固定領域（zenshin テーマは 960x720）なので、あふれた本文は静かに見切れる——
 // PDF の全ページ目視に頼らず、まずこのチェックで NG ページだけに目視を絞るための道具。
 //
 // 使い方: bun run build のあとに `bun run check`（bun run ci にも組み込み済み）
@@ -44,7 +44,7 @@ let hasOverflow = false;
 
 try {
   const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 720 });
+  await page.setViewport({ width: 960, height: 720 });
 
   for (const file of htmlFiles) {
     const url = pathToFileURL(path.join(SLIDES_DIR, file)).href;
