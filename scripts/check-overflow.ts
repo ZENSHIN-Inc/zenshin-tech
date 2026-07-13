@@ -1,13 +1,14 @@
 // スライドのはみ出し自動検知
 //
 // dist/slides/*.html を headless Chrome で開き、各ページ（Marp の inline SVG 内の section）の
-// scrollHeight と clientHeight を比較して「領域外にあふれたページ」を機械判定する。
+// scrollWidth / scrollHeight と clientWidth / clientHeight を比較して領域外へのあふれを検知し、
+// タイトルや表セルの行数も確認する。
 // Marp のスライドは固定領域（zenshin テーマは 1280x720）なので、あふれた本文は静かに見切れる——
 // PDF の全ページ目視に頼らず、まずこのチェックで NG ページだけに目視を絞るための道具。
 //
 // 使い方: bun run build のあとに `bun run check`（bun run ci にも組み込み済み）
-// 注意: 検知できるのは「領域外へのあふれ」のみ。フッターとの微妙な重なり・画像との
-//       バランスは、画像を入れたページに絞って PDF / PNG の目視で確認する。
+// 注意: フッターとの微妙な重なり・画像とのバランス・意味として不自然な改行は、
+//       該当ページを PDF / PNG で目視確認する。
 
 import fs from "node:fs";
 import path from "node:path";
@@ -19,9 +20,15 @@ const SLIDES_DIR = path.join(ROOT, "dist", "slides");
 // レンダリング誤差の許容値。これを超えてあふれたページのみ NG とする
 const TOLERANCE_PX = 2;
 
-interface Overflow {
+interface LayoutIssue {
   page: number;
-  overflowPx: number;
+  kind:
+    | "overflow"
+    | "title-wrap"
+    | "table-cell-lines"
+    | "table-cell-orphan"
+    | "nested-list-layout";
+  detail: string;
 }
 
 const htmlFiles = fs.existsSync(SLIDES_DIR)
@@ -54,28 +61,112 @@ try {
     await page.evaluate("document.fonts ? document.fonts.ready : null").catch(() => {});
 
     // tsconfig は DOM lib を含めない（Bun スクリプト用）ため、ブラウザ側コードは文字列で渡す
-    const overflows = (await page.evaluate(`
+    const issues = (await page.evaluate(`
       (() => {
         const svgs = Array.from(document.querySelectorAll("svg[data-marpit-svg]"));
         const result = [];
+
+        // 要素内の文字を実際の描画位置で行ごとにまとめる。
+        // element.getClientRects() は表セル全体を1矩形で返すため、文字単位のRangeを使う。
+        const visualLines = (element) => {
+          const lines = [];
+          const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+          while (walker.nextNode()) {
+            const node = walker.currentNode;
+            for (let offset = 0; offset < node.data.length; offset += 1) {
+              const char = node.data[offset];
+              if (/\\s/.test(char)) continue;
+              const range = document.createRange();
+              range.setStart(node, offset);
+              range.setEnd(node, offset + 1);
+              const rect = range.getClientRects()[0];
+              if (!rect || rect.width === 0 || rect.height === 0) continue;
+              let line = lines.find((candidate) => Math.abs(candidate.top - rect.top) < 1.5);
+              if (!line) {
+                line = { top: rect.top, text: "" };
+                lines.push(line);
+              }
+              line.text += char;
+            }
+          }
+          return lines.sort((a, b) => a.top - b.top);
+        };
+
         svgs.forEach((svg, i) => {
-          let worst = 0;
           for (const sec of svg.querySelectorAll("foreignObject > section")) {
             // 全面背景レイヤー（bg 画像のコンテナ）は本文ではないので除外
             const bg = sec.getAttribute("data-marpit-advanced-background");
             if (bg === "background" || bg === "pseudo") continue;
-            worst = Math.max(worst, sec.scrollHeight - sec.clientHeight);
+
+            const overflowX = sec.scrollWidth - sec.clientWidth;
+            const overflowY = sec.scrollHeight - sec.clientHeight;
+            if (overflowX > ${TOLERANCE_PX} || overflowY > ${TOLERANCE_PX}) {
+              result.push({
+                page: i + 1,
+                kind: "overflow",
+                detail: "横" + Math.max(0, overflowX) + "px / 縦" + Math.max(0, overflowY) + "px",
+              });
+            }
+
+            const title = sec.querySelector("h1");
+            if (title) {
+              const lines = visualLines(title);
+              if (lines.length > 1) {
+                result.push({ page: i + 1, kind: "title-wrap", detail: lines.length + "行" });
+              }
+            }
+
+            for (const cell of sec.querySelectorAll("th, td")) {
+              const lines = visualLines(cell);
+              const label = cell.textContent.trim().replace(/\\s+/g, " ").slice(0, 32);
+              if (lines.length > 2) {
+                result.push({
+                  page: i + 1,
+                  kind: "table-cell-lines",
+                  detail: lines.length + "行: " + label,
+                });
+              } else if (lines.length > 1 && Array.from(lines.at(-1).text).length === 1) {
+                result.push({
+                  page: i + 1,
+                  kind: "table-cell-orphan",
+                  detail: "末尾「" + lines.at(-1).text + "」: " + label,
+                });
+              }
+            }
+
+            // 3〜5項目の「見出し + 説明」型二階層リストを通常幅のまま置くと、
+            // 16:9では文字が左半分へ固まり右側だけが空きやすい。
+            // 画像の空白率は誤検知が多いため、構造を安定した代理指標として検知する。
+            for (const list of Array.from(sec.children).filter(
+              (child) => child.matches("ul, ol"),
+            )) {
+              const items = Array.from(list.children).filter((child) => child.matches("li"));
+              const describedItems = items.filter((item) =>
+                Array.from(item.children).some((child) => child.matches("ul, ol")),
+              );
+              if (
+                items.length >= 3 &&
+                items.length <= 5 &&
+                describedItems.length === items.length &&
+                !sec.classList.contains("detail-list")
+              ) {
+                result.push({
+                  page: i + 1,
+                  kind: "nested-list-layout",
+                  detail: items.length + "項目の二階層リストに detail-list がありません",
+                });
+              }
+            }
           }
-          if (worst > ${TOLERANCE_PX}) result.push({ page: i + 1, overflowPx: worst });
         });
         return result;
       })()
-    `)) as Overflow[];
+    `)) as LayoutIssue[];
 
-    if (overflows.length > 0) {
+    if (issues.length > 0) {
       hasOverflow = true;
-      for (const o of overflows) {
-        console.error(`NG  ${file}  page ${o.page}: ${o.overflowPx}px あふれ`);
+      for (const issue of issues) {
+        console.error(`NG  ${file}  page ${issue.page} [${issue.kind}]: ${issue.detail}`);
       }
     } else {
       console.log(`OK  ${file}（${await page.evaluate('document.querySelectorAll("svg[data-marpit-svg]").length')} ページ）`);
@@ -86,6 +177,6 @@ try {
 }
 
 if (hasOverflow) {
-  console.error("\nはみ出しページがあります。該当ページの本文を圧縮してください（slide-infographic スキルの「はみ出し調整」参照）。");
+  console.error("\nレイアウト上の問題があります。該当ページの改行・文章量・要素幅を見直してください。");
   process.exit(1);
 }

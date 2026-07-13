@@ -12,7 +12,7 @@ footer: © ZENSHIN Inc.
 <!-- _class: lead cover -->
 <!-- _paginate: false -->
 
-<div class="cover-kicker">SLIDES | 株式会社ZENSHIN</div>
+<div class="cover-kicker">スライド | 株式会社ZENSHIN</div>
 
 # 生成 AI ツール戦略
 
@@ -27,7 +27,7 @@ footer: © ZENSHIN Inc.
 
 ---
 
-<!-- _class: center -->
+<!-- _class: center table-followup -->
 
 # 結論から
 
@@ -403,7 +403,7 @@ Claude と OpenAI は**ツール活用のリードカンパニー**。
 ---
 
 <!-- header: 5. 課金戦略と副次効果 -->
-<!-- _class: center -->
+<!-- _class: center table-followup -->
 
 # 推奨する課金プラン
 
@@ -479,14 +479,28 @@ Claude と OpenAI は**ツール活用のリードカンパニー**。
 
 ---
 
-<!-- _class: lead -->
+<!-- _class: lead contact -->
 <!-- _paginate: false -->
 
-# ありがとうございました
+# お問い合わせ・関連リンク
 
-![w:240](../assets/brand/ZENSHIN-logo-white.webp)
+<div class="contact-links">
 
-AI ツール選定・導入のご相談を承っています。
-「うちの業務ならどう組めばいい？」から、お気軽にどうぞ。
+<div class="contact-group">
+<div class="contact-name">株式会社ZENSHIN</div>
+<div class="contact-row">
+<a href="https://www.zenshin-inc.co.jp/"><span>公式サイト</span>www.zenshin-inc.co.jp</a>
+<a href="https://www.zenshin-inc.co.jp/contact"><span>お問い合わせ</span>www.zenshin-inc.co.jp/contact</a>
+</div>
+</div>
 
-**お問い合わせ**: [www.zenshin-inc.co.jp/contact](https://www.zenshin-inc.co.jp/contact)
+<div class="contact-group">
+<div class="contact-name">高橋 俊 <span>CTO / 技術責任者</span></div>
+<div class="contact-row">
+<a href="https://x.com/suguru_takaha4"><span>X</span>@suguru_takaha4</a>
+</div>
+</div>
+
+</div>
+
+<img class="contact-logo" src="../assets/brand/ZENSHIN-logo-white.webp" alt="ZENSHIN">
