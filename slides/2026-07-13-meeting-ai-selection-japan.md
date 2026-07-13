@@ -41,16 +41,9 @@ footer: © ZENSHIN Inc.
 
 <!-- header: 1. 用途別の推奨 -->
 
-# 用途別の選び分け
+# Yes / Noで選ぶ
 
-| やりたいこと | 選ぶ製品 |
-| --- | --- |
-| Zoom / Meet / Teams / Webexを広く取得 | **Fireflies** |
-| 日本語と英語が混ざる会議 | **Notta** |
-| ChatGPT / Claudeから会議を検索 | **Fathom** |
-| 顧客の声・失注理由を複数会議から分析 | **tl;dv** |
-| 会議中の質問・営業支援 | **Otter** |
-| Teams / Meet / Zoom / Slack内で完結 | **各社の標準AI** |
+![w:860](../assets/slides/meeting-ai-selection-japan/tool-selection.svg)
 
 > 製品の総合順位ではなく、***自社で最も多い会議経路と再利用方法***で選ぶ。
 

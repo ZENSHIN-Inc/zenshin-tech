@@ -1,0 +1,18 @@
+{
+  "theme": "base",
+  "securityLevel": "strict",
+  "flowchart": {
+    "curve": "basis",
+    "htmlLabels": true,
+    "nodeSpacing": 28,
+    "rankSpacing": 24,
+    "useMaxWidth": false
+  },
+  "themeVariables": {
+    "fontFamily": "Noto Sans JP, Noto Sans CJK JP, sans-serif",
+    "fontSize": "30px",
+    "lineColor": "#8c6f42",
+    "edgeLabelBackground": "#fbf9f4",
+    "background": "transparent"
+  }
+}

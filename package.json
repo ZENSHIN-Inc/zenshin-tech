@@ -8,8 +8,10 @@
     "dev": "bunx marp --server --theme-set themes slides",
     "build": "bun scripts/build.ts",
     "typecheck": "tsc --noEmit",
-    "ci": "bun run typecheck && bun run build && bun run check",
-    "check": "bun scripts/check-overflow.ts"
+    "ci": "bun run typecheck && bun run sync:agent-docs:check && bun run build && bun run check",
+    "check": "bun scripts/check-overflow.ts",
+    "sync:agent-docs": "node scripts/sync-agent-docs.mjs",
+    "sync:agent-docs:check": "node scripts/sync-agent-docs.mjs --check"
   },
   "repository": {
     "type": "git",

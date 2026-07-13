@@ -14,8 +14,6 @@ description: >
 
 # slide-infographic Skill（Marp スライドにインフォグラフィックを差し込む）
 
-> Claude Code 用の派生スキルです。正本は `docs/agent-instructions/skills/slide-infographic/SKILL.md.liquid`。`bun run sync:agent-docs` で生成するため、直接編集しないでください。
-
 > **Core Principle**: スライド本文（見出し・箇条書き・表）は内容を変えない。ページに「読む前の地図」となる1枚絵を添えるだけ。図解は **gpt-image-2 で生成した「手書き風イラスト＋正確な日本語テキスト」画像**。Markdown 資料と違いスライドは 1 ページの領域が固定なので、**差し込み後に必ず `bun run build && bun run check` ではみ出しを機械検知し、画像を入れたページだけ目視する**。
 
 ## 姉妹スキルとの使い分け
