@@ -67,17 +67,29 @@ footer: © ZENSHIN Inc.
 
 # 迷ったらFireflies
 
-| 強み | 内容 |
-| --- | --- |
-| **取得範囲** | Zoom / Meet / Teams / Webex等へBot参加 |
-| **Botなし** | desktopでsystem audioを取得 |
-| **対面・file** | mobile録音、既存audio / video upload |
-| **分析** | AskFred、会話分析、AI Skills |
-| **再利用** | Slack、CRM、API、公式MCP |
+<div class="columns">
+
+<div>
+
+### 向いている
+
+- **主要Web会議へBot参加**
+  - Zoom / Meet / Teams / Webex
+- **Botなしで取得**
+  - desktop system audio
+- **対面・既存fileを集約**
+  - mobile録音、audio / video upload
+- **分析・再利用**
+  - AskFred、AI Skills、Slack、CRM、API、MCP
+
+</div>
 
 <div class="callout warn" data-label="向かない場合">
 
-日本語と英語の二言語会議を最優先するならNotta。会議横断の引用体験を最優先するならFathomも比較する。
+- 日本語と英語の二言語会議が最優先
+- 会議横断の検索と引用体験が最優先
+
+</div>
 
 </div>
 
@@ -85,17 +97,30 @@ footer: © ZENSHIN Inc.
 
 # Fathomを選ぶ場合
 
-| 向いている用途 | 理由 |
-| --- | --- |
-| **会議横断検索** | account全体から質問・検索できる |
-| **根拠確認** | 回答から該当発言へ戻れる引用 |
-| **顧客・案件管理** | customer view / deal view |
-| **AIから利用** | ChatGPT / Claude、API、公式MCP |
-| **使いやすさ** | live summary、scratchpad、clip |
+<div class="columns">
+
+<div>
+
+### 向いている
+
+- **会議横断で質問・検索したい**
+  - account全体を検索し、該当発言へ戻れる
+- **顧客・案件単位で整理したい**
+  - customer view / deal view
+- **ChatGPT / Claudeから使いたい**
+  - API、公式MCPに対応
+- **会議中も記録を補助したい**
+  - live summary、scratchpad、clip
+
+</div>
 
 <div class="callout warn" data-label="確認事項">
 
-Botなし録音、Slack Huddle、iOS対面録音はベータ・段階展開・OS差がある。導入環境で利用可否を確認する。
+- Botなし録音、Slack Huddleは段階展開
+- iOS対面録音はベータ・OS差あり
+- 導入環境で利用可否を確認する
+
+</div>
 
 </div>
 
@@ -103,29 +128,43 @@ Botなし録音、Slack Huddle、iOS対面録音はベータ・段階展開・OS
 
 # Nottaを選ぶ場合
 
-| 向いている用途 | 理由 |
-| --- | --- |
-| **日本語・多言語** | 単一言語58言語に対応 |
-| **二言語会議** | 23言語から2言語を選択 |
-| **対面・訪問** | mobile、Notta Memo |
-| **Slack Huddle** | 専用Bot※、desktop録音※ |
-| **文書横断** | Brainで会議とOffice文書を分析 |
+<div class="columns">
 
-※ ベータ・plan・OS条件あり。公式MCPは未確認。Brainの有料枠は本体と独立。
+<div>
+
+### 向いている
+
+- **日本語・多言語を重視**
+  - 単一言語58言語に対応
+- **二言語が混ざる会議**
+  - 23言語から2言語を選択
+- **対面・訪問を記録**
+  - mobile、Notta Memo
+- **会議と文書を横断分析**
+  - BrainでOffice文書も扱える
+
+</div>
+
+<div class="callout warn" data-label="確認事項">
+
+- Slack HuddleはBot・desktopに条件あり
+- Brainの有料枠は本体と独立
+- 公式MCPは確認できていない
+
+</div>
+
+</div>
 
 ---
 
 # tl;dv・Otterを選ぶ場合
 
-| 製品 | 向いている用途 | 主な特徴 |
+| 比較軸 | **tl;dv** | **Otter** |
 | --- | --- | --- |
-| **tl;dv** | 営業・CS・VoC分析 | 複数会議report、Playbook、MCP |
-| **tl;dv** | Botを入れにくい会議 | desktopのsystem audio録音 |
-| **Otter** | 会議中のAI支援 | Meeting Agent、AI Chat |
-| **Otter** | 英語圏中心の運用 | 営業coaching、slide capture |
-
-- tl;dvはSlack Huddle等もBotなしで取得できる
-- Otterは日本語を含む6言語に対応するが、多言語の広さではNottaに劣る
+| 最も向く用途 | 営業・CS・VoCの横断分析 | 会議中のAI支援 |
+| 分析・支援 | 複数会議report、Playbook、MCP | Meeting Agent、AI Chat |
+| Botなし取得 | desktopでsystem audioを録音 | desktop recording |
+| 注意点 | 検索会議数などplan差を確認 | 対応は6言語、多言語用途は要比較 |
 
 > ***会議後の横断分析ならtl;dv、会議中の支援ならOtter***。
 
@@ -164,12 +203,31 @@ Botなし録音、Slack Huddle、iOS対面録音はベータ・段階展開・OS
 
 # MCPは選定条件の一つ
 
-| MCPでできる | MCPだけではできない |
-| --- | --- |
-| 保存済み会議をAIから検索 | 会議を録音する |
-| transcript・要約を取得 | Bot参加を許可させる |
-| 複数会議を横断分析 | 対面音声を収音する |
-| 提案書・mailへ再利用 | 元サービスの権限を代替する |
+<div class="columns">
+
+<div class="card">
+
+### MCPでできる
+
+- 保存済み会議をAIから検索
+- transcript・要約を取得
+- 複数会議を横断分析
+- 提案書・mailへ再利用
+
+</div>
+
+<div class="card">
+
+### MCPだけではできない
+
+- 会議を録音する
+- Bot参加を許可させる
+- 対面音声を収音する
+- 元サービスの権限を代替する
+
+</div>
+
+</div>
 
 - OAuthでも検索範囲・引用・取得上限・管理者許可を確認する
 - 元サービス側とChatGPT / Claude側の両方に利用条件がある
@@ -180,13 +238,29 @@ Botなし録音、Slack Huddle、iOS対面録音はベータ・段階展開・OS
 
 # 日本語利用で確認する点
 
-| 確認項目 | 理由 |
-| --- | --- |
-| **固有名詞** | 社名・製品名・人名で差が出る |
-| **話者識別** | 対面・重なり発話で崩れやすい |
-| **最終決定** | 途中の案を決定と誤認しやすい |
-| **action item** | 担当者と期限まで必要 |
-| **二言語** | 対応言語数と実精度は別 |
+<div class="columns">
+
+<div>
+
+- **固有名詞**
+  - 社名・製品名・人名で差が出る
+- **話者識別**
+  - 対面・重なり発話で崩れやすい
+- **最終決定**
+  - 途中の案を決定と誤認しやすい
+
+</div>
+
+<div>
+
+- **action item**
+  - 担当者と期限まで取得できるか
+- **二言語**
+  - 対応言語数と実精度は別
+
+</div>
+
+</div>
 
 - 公称対応言語数は精度順位ではない
 - 実際の日本語会議で文字起こし、要約、検索結果を確認する
@@ -195,17 +269,33 @@ Botなし録音、Slack Huddle、iOS対面録音はベータ・段階展開・OS
 
 # 統制できる製品を選ぶ
 
-| 領域 | 契約前の確認 |
-| --- | --- |
-| **ID・権限** | SSO / SCIM / role / OAuth scope |
-| **保持・削除** | retention / export / 退職者対応 |
-| **監査** | audit log / 共有履歴 / 管理者権限 |
-| **データ** | 保存地域 / 学習利用 / 暗号化 |
-| **同意** | Bot・Botなし・対面の通知方法 |
+<div class="columns">
+
+<div>
+
+- **ID・権限**
+  - SSO / SCIM / role / OAuth scope
+- **保持・削除**
+  - retention / export / 退職者対応
+- **監査**
+  - audit log / 共有履歴 / 管理者権限
+
+</div>
+
+<div>
+
+- **データ**
+  - 保存地域 / 学習利用 / 暗号化
+- **同意**
+  - Bot・Botなし・対面の通知方法
+
+</div>
+
+</div>
 
 <div class="callout danger" data-label="禁止">
 
-共有アカウントで費用を節約しない。利用者単位のaccount、最小権限、監査可能性を前提にする。
+共有accountは禁止。利用者単位、最小権限、監査可能を前提にする。
 
 </div>
 
@@ -213,13 +303,29 @@ Botなし録音、Slack Huddle、iOS対面録音はベータ・段階展開・OS
 
 # 価格は総費用で見る
 
-| 差が出る要素 | 確認内容 |
-| --- | --- |
-| **課金単位** | seat / minutes / AI credits |
-| **契約期間** | 月払い / 年払い / 最低seat |
-| **追加費用** | 翻訳 / Brain / API / storage |
-| **利用者区分** | member / admin / viewer / guest |
-| **実質費用** | 対象人数 × 必要plan + 管理工数 |
+<div class="columns">
+
+<div>
+
+- **課金単位**
+  - seat / minutes / AI credits
+- **契約期間**
+  - 月払い / 年払い / 最低seat
+- **追加費用**
+  - 翻訳 / Brain / API / storage
+
+</div>
+
+<div>
+
+- **利用者区分**
+  - member / admin / viewer / guest
+- **実質費用**
+  - 対象人数 × 必要plan + 管理工数
+
+</div>
+
+</div>
 
 - 料金は2026年7月13日に再確認
 - 税・通貨・年払い条件が異なるため、表示価格の単純順位は付けない

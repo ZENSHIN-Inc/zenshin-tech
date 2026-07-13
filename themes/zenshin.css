@@ -23,7 +23,7 @@
  *   <div class="stats">
  *     <div class="stat"><div class="num">$200</div><div class="label">説明</div></div>
  *   </div>                                       … 大きな数字の KPI タイル（横に自動で並ぶ）
- *   blockquote（> 行）                           … 「POINT」ラベル付きコールアウト（ゴールド）
+ *   blockquote（> 行）                           … 「POINT」ラベル付きコールアウト（濃紺・結論）
  *   <div class="callout good|warn|danger|info">  … 色付きコールアウト
  *     good=GOOD(緑・良い点) / warn=CAUTION(黄・注意) / danger=WARNING(赤・危険) / info=INFO(青・補足)
  *     ラベル文字列は data-label="..." で上書き可能
@@ -113,7 +113,7 @@ section strong > em {
   border-bottom: 3px solid var(--zenshin-gold);
 }
 
-/* コールアウト: blockquote（> 行）は POINT（ゴールド）。
+/* コールアウト: blockquote（> 行）は POINT（濃紺・結論）。
    <div class="callout good|warn|danger|info"> で意味に応じた色バリエーション */
 section blockquote,
 section .callout {
@@ -140,6 +140,23 @@ section .callout::before {
   margin-bottom: 0.3em;
 }
 
+/* POINTは「このページの結論」。濃紺の面で、薄い黄色のCAUTIONと明確に区別する */
+section blockquote {
+  border-color: var(--zenshin-ink);
+  border-left-color: var(--zenshin-gold);
+  background: var(--zenshin-ink);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(12, 18, 32, 0.14);
+}
+
+section blockquote::before {
+  color: var(--zenshin-gold-light);
+}
+
+section blockquote strong {
+  color: #ffffff;
+}
+
 section .callout > p {
   margin: 0.2em 0;
 }
@@ -160,7 +177,7 @@ section .callout.good::before {
   color: #1a7f37;
 }
 
-/* 注意（黄） */
+/* 注意（黄）: 適用条件・導入前の確認・制約 */
 section .callout.warn {
   border-left-color: #d4a72c;
   background: #fdf8e7;
@@ -182,7 +199,7 @@ section .callout.danger::before {
   color: #cf222e;
 }
 
-/* 補足情報（青） */
+/* 補足情報（青）: 結論を変えない背景・注記・確認日 */
 section .callout.info {
   border-left-color: var(--zenshin-blue);
   background: #eff5fd;
