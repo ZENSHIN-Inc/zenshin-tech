@@ -189,6 +189,11 @@ section .note::before {
 /* 表の補足は表との所属関係が分かるよう中央へそろえる。
    可変幅テーブルの左端をCSSだけで追従するより、幅に依存しない中央配置を優先する */
 section table + .note {
+  width: 82%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-left: auto;
+  margin-right: auto;
   text-align: center;
 }
 
@@ -270,9 +275,29 @@ section pre code {
 
 /* テーブル: 軽いヘッダー + ゼブラ。直後のテキストが詰まって見えないよう下に余白を取る */
 section table {
+  width: 82%;
+  max-width: 100%;
+  box-sizing: border-box;
   font-size: 0.9em;
   border-collapse: collapse;
   margin: 0.45em auto 1.1em;
+}
+
+/* 表ページは表を基準に一つの中央カラムとして読む。
+   表より後ろの本文・リスト・コールアウトが表幅から外へ広がらないようにする */
+section > table ~ p:not(.note),
+section > table ~ ul,
+section > table ~ ol,
+section > table ~ .callout {
+  width: 82%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+section > table ~ blockquote {
+  max-width: 82%;
 }
 
 section table th {
