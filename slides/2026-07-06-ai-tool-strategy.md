@@ -1,24 +1,29 @@
 ---
 marp: true
 theme: zenshin
+size: 16:9
 lang: ja
 paginate: true
-title: 生成 AI ツール戦略 2026年7月版 — 今は Codex と GPT-5.6 系を選ぶ理由
+title: 生成 AI ツール戦略 — Codex と GPT-5.6 系を選ぶ理由
 description: モデルの勢力図（トップ 2 社 + 厚い追走ティア）から、なぜ現時点では GPT-5.6 系と Codex を主力にするのか、Claude との比較、コスパ・タイパ、課金戦略までを整理します。
 footer: © ZENSHIN Inc.
 ---
 
-<!-- _class: lead -->
+<!-- _class: lead cover -->
 <!-- _paginate: false -->
+
+<div class="cover-kicker">SLIDES | 株式会社ZENSHIN</div>
 
 # 生成 AI ツール戦略
 
-## 2026年7月版<br>今は **Codex と GPT-5.6 系**を選ぶ理由
+## 主力モデルとCLIを性能・知能・費用から選ぶ
 
-![w:240](../assets/brand/ZENSHIN-logo-white.webp)
+<div class="cover-meta">
+<div class="cover-date">作成日 2026.07.06</div>
+<div class="cover-author">高橋 俊 <span>CTO / 技術責任者</span></div>
+</div>
 
-2026年7月6日
-株式会社ZENSHIN CTO 高橋俊
+<img class="cover-logo" src="../assets/brand/ZENSHIN-logo-white.webp" alt="ZENSHIN">
 
 ---
 
@@ -190,7 +195,7 @@ Opus 4.8 を上回り、GPT 系の優位が鮮明になった。
 | **Luna / Haiku 4.5** | 51 > 24 | 211 > 93 | Luna が安い | **Luna** |
 | **Luna / Gemini 3.5 Flash** | 51 > 50 | 211 > 162 | Luna が安い | **Luna** |
 
-<div class="callout info" data-label="比較条件">
+<div class="callout info">
 
 ここでの「上位」は、Artificial Analysis の**知能・出力速度・タスク費用**の同時点比較。製品機能や利用上限まで含む「完全互換」ではない。
 
@@ -206,7 +211,7 @@ Opus 4.8 を上回り、GPT 系の優位が鮮明になった。
 | **Opus 5** | Sol 対抗モデルとして早期投入される可能性 |
 | **Gemini** | 新モデルを急がず、OS・デザインツールへの AI 統合を優先 |
 
-<div class="callout warn" data-label="仮説">
+<div class="callout warn">
 
 このページは発表済み事実ではなく、2026年7月時点の所感。新モデル・料金・利用枠の変更時に見直す。
 

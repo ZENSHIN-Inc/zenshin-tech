@@ -6,6 +6,7 @@
     "htmlLabels": true,
     "nodeSpacing": 28,
     "rankSpacing": 24,
+    "diagramPadding": 40,
     "useMaxWidth": false
   },
   "themeVariables": {
