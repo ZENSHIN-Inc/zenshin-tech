@@ -2,7 +2,7 @@
 //
 // dist/slides/*.html を headless Chrome で開き、各ページ（Marp の inline SVG 内の section）の
 // scrollWidth / scrollHeight と clientWidth / clientHeight を比較して領域外へのあふれを検知し、
-// タイトルや表セルの行数も確認する。
+// タイトルや表セルの行数に加え、16:9で左へ偏りやすい二階層リストの指定漏れも確認する。
 // Marp のスライドは固定領域（zenshin テーマは 1280x720）なので、あふれた本文は静かに見切れる——
 // PDF の全ページ目視に頼らず、まずこのチェックで NG ページだけに目視を絞るための道具。
 //
@@ -27,6 +27,7 @@ interface LayoutIssue {
     | "title-wrap"
     | "table-cell-lines"
     | "table-cell-orphan"
+    | "table-intro-layout"
     | "nested-list-layout";
   detail: string;
 }
@@ -130,6 +131,22 @@ try {
                   page: i + 1,
                   kind: "table-cell-orphan",
                   detail: "末尾「" + lines.at(-1).text + "」: " + label,
+                });
+              }
+            }
+
+            // 表の直前に通常段落や結論文を置くと、読む順序が「説明→表→結論」に分散する。
+            // 表はタイトル直下へ置き、必要な結論は表の後ろへ回す。
+            for (const table of sec.querySelectorAll("table")) {
+              const previous = table.previousElementSibling;
+              if (
+                previous &&
+                (previous.matches("p:not(.note)") || previous.matches("blockquote"))
+              ) {
+                result.push({
+                  page: i + 1,
+                  kind: "table-intro-layout",
+                  detail: "表の直前に説明文があります",
                 });
               }
             }

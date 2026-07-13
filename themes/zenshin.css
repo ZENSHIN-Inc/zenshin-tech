@@ -2,7 +2,7 @@
 /* @size 16:9 1280px 720px */
 /* @size 4:3 960px 720px */
 /*
- * ZENSHIN ブランドテーマ v2.8
+ * ZENSHIN ブランドテーマ v2.10
  * - スライドサイズは 16:9（1280x720）が既定。frontmatter にも `size: 16:9` を明記する
  * - 本文 22px / line-height 1.65（v2.3 で 25px から縮小。縮小で生まれた領域は文字数を増やす余地ではなく
  *   要素間の余白＝行間・箇条書き間・コールアウト前後に充てる設計）
@@ -142,7 +142,7 @@ section .callout::before {
 }
 
 /* ページの結論: 補足コールアウトとは別系統の、ラベル・枠・背景なしの中央1文。
-   直前の内容から離れて浮かないよう間隔を抑える */
+   本文より一段大きくし、上下の余白で内容と区切りつつページから浮かせない */
 section blockquote {
   position: relative;
   width: fit-content;
@@ -152,8 +152,8 @@ section blockquote {
   background: transparent;
   color: var(--zenshin-ink);
   padding: 0;
-  margin: 0.8em auto 0;
-  font-size: 1.04em;
+  margin: 1.05em auto 0.55em;
+  font-size: 1.18em;
   font-weight: 700;
   text-align: center;
   box-shadow: none;
@@ -612,7 +612,7 @@ section.cover footer {
   display: none;
 }
 
-/* 公開資料の最終ページ: 登壇用の謝辞ではなく、読者が次の行動を選べるリンク集にする */
+/* 公開資料の最終ページ: 短い謝辞の下へ、質問先と関連リンクを一列で置く */
 section.lead.contact {
   position: relative;
   display: block;
@@ -621,56 +621,71 @@ section.lead.contact {
 }
 
 section.lead.contact h1 {
-  margin: 0 0 1.1em;
+  margin: 0 0 0.45em;
   color: #ffffff;
   font-size: 2.35em;
   line-height: 1.2;
   text-align: left;
 }
 
+section.contact .contact-intro {
+  margin-bottom: 1.2em;
+  color: #d7dde6;
+  font-size: 1.02em;
+}
+
 section.contact .contact-links {
-  width: 860px;
+  display: grid;
+  width: 790px;
+  gap: 0.75em;
 }
 
-section.contact .contact-group + .contact-group {
-  margin-top: 1.45em;
-  padding-top: 1.15em;
-  border-top: 1px solid rgba(196, 169, 125, 0.45);
-}
-
-section.contact .contact-name {
-  color: #ffffff;
-  font-size: 1.08em;
-  font-weight: 700;
-}
-
-section.contact .contact-name span {
-  margin-left: 0.65em;
-  color: #aeb7c5;
-  font-size: 0.72em;
-  font-weight: 500;
-}
-
-section.contact .contact-row {
-  display: flex;
-  gap: 2.4em;
-  margin-top: 0.65em;
-}
-
-section.contact .contact-row a {
-  display: flex;
-  flex-direction: column;
+section.contact .contact-links a {
+  display: block;
+  padding-bottom: 0.55em;
+  border-bottom: 1px solid rgba(196, 169, 125, 0.35);
   color: #d7dde6;
   line-height: 1.35;
   text-decoration: none;
 }
 
-section.contact .contact-row a span {
+section.contact .contact-home {
+  display: block;
+  width: 790px;
+  margin-top: 1em;
+  padding-top: 0.85em;
+  border-top: 1px solid rgba(196, 169, 125, 0.35);
+  color: #d7dde6;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+section.contact .contact-links a:last-child {
+  border-bottom: 0;
+}
+
+section.contact .contact-links a span,
+section.contact .contact-home span {
+  display: block;
   margin-bottom: 0.18em;
   color: var(--zenshin-gold);
-  font-size: 0.62em;
+  font-size: 0.65em;
   font-weight: 900;
   letter-spacing: 0.12em;
+}
+
+section.contact .contact-links a strong,
+section.contact .contact-home strong {
+  color: #ffffff;
+  font-size: 0.96em;
+  font-weight: 500;
+}
+
+section.contact .contact-links a small {
+  margin-left: 0.7em;
+  color: #aeb7c5;
+  font-size: 0.7em;
+  font-weight: 500;
 }
 
 section.contact .contact-logo {
