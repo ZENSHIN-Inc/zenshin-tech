@@ -152,7 +152,7 @@ section blockquote {
   background: transparent;
   color: var(--zenshin-ink);
   padding: 0;
-  margin: 1.05em auto 0.55em;
+  margin: 1.5em auto 0.55em;
   font-size: 1.18em;
   font-weight: 700;
   text-align: center;
@@ -194,6 +194,8 @@ section table + .note {
   box-sizing: border-box;
   margin-left: auto;
   margin-right: auto;
+  /* 注記の直後に本文リストが続くページで詰まって見えないよう、下にも表と同程度の余白を取る */
+  margin-bottom: 1.2em;
   text-align: center;
 }
 
@@ -275,6 +277,9 @@ section pre code {
 
 /* テーブル: 軽いヘッダー + ゼブラ。直後のテキストが詰まって見えないよう下に余白を取る */
 section table {
+  /* marp-core の default テーマは table を display:block にするため、指定幅がセルへ効かず
+     「箱は中央・中身は左寄り」に見える。本来の table レイアウトへ戻して幅をセルまで効かせる */
+  display: table;
   width: 82%;
   max-width: 100%;
   box-sizing: border-box;
@@ -439,8 +444,10 @@ section.center {
   text-align: center;
 }
 
-section.center ul,
-section.center ol {
+/* 中央ページの最上位リストだけをブロックごと中央へ置く。入れ子のリストまで
+   inline-block にすると、detail-list の短い説明が親項目と同じ行へ並んでしまう */
+section.center > ul,
+section.center > ol {
   display: inline-block;
   text-align: left;
 }

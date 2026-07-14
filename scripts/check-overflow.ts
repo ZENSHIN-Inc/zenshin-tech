@@ -31,6 +31,7 @@ interface LayoutIssue {
     | "table-centering"
     | "table-followup-alignment"
     | "left-heavy-layout"
+    | "detail-list-inline-description"
     | "nested-list-layout";
   detail: string;
 }
@@ -162,9 +163,19 @@ try {
               const contentLeft = secRect.left + parseFloat(secStyle.paddingLeft);
               const contentRight = secRect.right - parseFloat(secStyle.paddingRight);
               for (const table of sec.querySelectorAll(":scope > table")) {
-                const rect = table.getBoundingClientRect();
-                const leftGap = rect.left - contentLeft;
-                const rightGap = contentRight - rect.right;
+                // 要素の箱ではなくセルの実描画範囲で測る。display:block 化した表は
+                // 「箱は中央・中身は左寄り」になり、要素ボックスの計測ではすり抜けるため
+                let tableLeft = Infinity;
+                let tableRight = -Infinity;
+                for (const cell of table.querySelectorAll("th, td")) {
+                  const cellRect = cell.getBoundingClientRect();
+                  if (cellRect.width === 0) continue;
+                  tableLeft = Math.min(tableLeft, cellRect.left);
+                  tableRight = Math.max(tableRight, cellRect.right);
+                }
+                if (!Number.isFinite(tableLeft)) continue;
+                const leftGap = tableLeft - contentLeft;
+                const rightGap = contentRight - tableRight;
                 if (Math.abs(leftGap - rightGap) > 8) {
                   result.push({
                     page: i + 1,
@@ -244,6 +255,28 @@ try {
                     page: i + 1,
                     kind: "left-heavy-layout",
                     detail: "本文の右側が空いています（本文右端 " + Math.round(usage * 100) + "%）",
+                  });
+                }
+              }
+            }
+
+            // detail-list は「親項目の行 → 説明の行」の2行構成が前提。
+            // CSS の影響などで説明が親項目と同じ行へ並ぶと、説明の長い項目だけ
+            // 折り返して行数が不揃いになるため、説明の開始位置を実測で確認する。
+            if (sec.classList.contains("detail-list")) {
+              for (const item of sec.querySelectorAll(":scope > ul > li")) {
+                const heading = item.querySelector(":scope > strong");
+                const description = item.querySelector(":scope > ul");
+                if (!heading || !description) continue;
+                const headingRect = heading.getBoundingClientRect();
+                const descriptionRect = description.getBoundingClientRect();
+                if (descriptionRect.top < headingRect.bottom - 2) {
+                  result.push({
+                    page: i + 1,
+                    kind: "detail-list-inline-description",
+                    detail:
+                      "説明が親項目と同じ行に並んでいます: " +
+                      heading.textContent.trim().slice(0, 24),
                   });
                 }
               }
