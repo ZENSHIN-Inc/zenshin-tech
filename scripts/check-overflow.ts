@@ -30,6 +30,7 @@ interface LayoutIssue {
     | "table-intro-layout"
     | "table-centering"
     | "table-followup-alignment"
+    | "left-heavy-layout"
     | "nested-list-layout";
   detail: string;
 }
@@ -193,6 +194,56 @@ try {
                     page: i + 1,
                     kind: "table-followup-alignment",
                     detail: "表と補足の左端差 " + Math.round(leftDiff) + "px",
+                  });
+                }
+              }
+            }
+
+            // 左揃えの本文を手動改行などで自然な折り返しより大幅に手前で折ると、
+            // 本文が左半分へ固まって右側が空き、中央揃えのタイトル・結論と軸がずれて
+            // ページ全体がちぐはぐに見える。本文テキストの実測右端の使用率で検知する。
+            {
+              const style = getComputedStyle(sec);
+              const rect = sec.getBoundingClientRect();
+              const cLeft = rect.left + parseFloat(style.paddingLeft);
+              const cWidth = rect.right - parseFloat(style.paddingRight) - cLeft;
+              const skip = ["center", "detail-list", "divider", "lead"].some((c) =>
+                sec.classList.contains(c),
+              );
+              const prose = Array.from(sec.children).filter((el) =>
+                el.matches("ul, ol, p:not(.note)"),
+              );
+              if (!skip && cWidth > 0 && prose.length > 0) {
+                let maxRight = 0;
+                let textLen = 0;
+                let anchorLen = 0;
+                const track = (r) => {
+                  if (r && r.width > 0) maxRight = Math.max(maxRight, r.right);
+                };
+                for (const block of prose) {
+                  textLen += block.textContent.length;
+                  for (const anchor of block.querySelectorAll("a")) {
+                    anchorLen += anchor.textContent.length;
+                  }
+                  const textWalker = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+                  while (textWalker.nextNode()) {
+                    const range = document.createRange();
+                    range.selectNodeContents(textWalker.currentNode);
+                    for (const r of range.getClientRects()) track(r);
+                  }
+                }
+                // 表・カード・コールアウト・画像が右側を埋めているページはバランスが取れている
+                for (const el of sec.querySelectorAll(":scope > table, :scope > div, img")) {
+                  track(el.getBoundingClientRect());
+                }
+                const usage = (maxRight - cLeft) / cWidth;
+                // 出典などのリンク集ページ（本文の半分以上がリンク文字列）は行が短くて正常なので除外
+                const isLinkList = textLen > 0 && anchorLen / textLen >= 0.5;
+                if (maxRight > 0 && !isLinkList && usage < 0.85) {
+                  result.push({
+                    page: i + 1,
+                    kind: "left-heavy-layout",
+                    detail: "本文の右側が空いています（本文右端 " + Math.round(usage * 100) + "%）",
                   });
                 }
               }

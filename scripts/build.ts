@@ -311,3 +311,8 @@ fs.writeFileSync(
 );
 
 console.log(`Done: ${decks.length} deck(s), ${galleryGroups.length} gallery group(s) -> dist/`);
+
+// marp-cli の Node API が Chrome まわりのハンドルを残すことがあり、全処理後も
+// プロセスが終了せず CI が timeout-minutes まで待ち続ける（ローカル・Actions 双方で観測）。
+// 成果物は出力済みなので明示的に終了する
+process.exit(0);
