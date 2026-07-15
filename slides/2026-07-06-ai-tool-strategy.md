@@ -391,6 +391,16 @@ Web ブラウザ版とは別物。***Web 版だけでは実力の半分も出な
 
 ---
 
+# 構成図 — 手足だけがローカルに来る
+
+<p class="lead-in">前ページの違いを 1 枚の構成図にすると、次のようになります。</p>
+
+![w:960](../assets/slides/2026-07-06-ai-tool-strategy/cloud-local-architecture.svg)
+
+> Web 版との違いは***手足がローカルにあるかどうか***
+
+---
+
 # 主力は Codex、Claude も使える状態を保つ
 
 <p class="lead-in">Anthropic と OpenAI は、ツール活用のリードカンパニーです。</p>
