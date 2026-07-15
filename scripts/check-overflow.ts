@@ -25,6 +25,7 @@ interface LayoutIssue {
   kind:
     | "overflow"
     | "title-wrap"
+    | "lead-wrap"
     | "table-cell-lines"
     | "table-cell-orphan"
     | "table-intro-layout"
@@ -121,6 +122,15 @@ try {
               }
             }
 
+            // リード文（タイトル直下の .lead-in）は 1 行が前提。2 行になると
+            // タイトル → リード → 本文の階層が崩れるため、言い換えで短縮する
+            for (const lead of sec.querySelectorAll(".lead-in")) {
+              const lines = visualLines(lead);
+              if (lines.length > 1) {
+                result.push({ page: i + 1, kind: "lead-wrap", detail: lines.length + "行" });
+              }
+            }
+
             for (const cell of sec.querySelectorAll("th, td")) {
               const lines = visualLines(cell);
               const label = cell.textContent.trim().replace(/\\s+/g, " ").slice(0, 32);
@@ -141,11 +151,12 @@ try {
 
             // 表の直前に通常段落や結論文を置くと、読む順序が「説明→表→結論」に分散する。
             // 表はタイトル直下へ置き、必要な結論は表の後ろへ回す。
+            // リード文（.lead-in）はタイトルと一体の要素なので例外（v3.0）。
             for (const table of sec.querySelectorAll("table")) {
               const previous = table.previousElementSibling;
               if (
                 previous &&
-                (previous.matches("p:not(.note)") || previous.matches("blockquote"))
+                (previous.matches("p:not(.note):not(.lead-in)") || previous.matches("blockquote"))
               ) {
                 result.push({
                   page: i + 1,
@@ -211,8 +222,8 @@ try {
             }
 
             // 左揃えの本文を手動改行などで自然な折り返しより大幅に手前で折ると、
-            // 本文が左半分へ固まって右側が空き、中央揃えのタイトル・結論と軸がずれて
-            // ページ全体がちぐはぐに見える。本文テキストの実測右端の使用率で検知する。
+            // 本文が左半分へ固まって右側だけが空き、ページ全体がちぐはぐに見える。
+            // 本文テキストの実測右端の使用率で検知する。
             {
               const style = getComputedStyle(sec);
               const rect = sec.getBoundingClientRect();
@@ -221,8 +232,9 @@ try {
               const skip = ["center", "detail-list", "divider", "lead"].some((c) =>
                 sec.classList.contains(c),
               );
+              // リード文は意図的に短い 1 行なので、右端使用率の計測対象から外す
               const prose = Array.from(sec.children).filter((el) =>
-                el.matches("ul, ol, p:not(.note)"),
+                el.matches("ul, ol, p:not(.note):not(.lead-in)"),
               );
               if (!skip && cWidth > 0 && prose.length > 0) {
                 let maxRight = 0;

@@ -2,7 +2,11 @@
 /* @size 16:9 1280px 720px */
 /* @size 4:3 960px 720px */
 /*
- * ZENSHIN ブランドテーマ v2.11
+ * ZENSHIN ブランドテーマ v3.1
+ * - v3.0: 「読ませる資料」への転換。タイトル（h1）を左寄せ + 左縦バーに変更し、
+ *   タイトル直下のリード文 .lead-in と全幅スタックカードを追加、detail-list を左揃えへ変更
+ * - v3.1: center ページのタイトルも左寄せに統一（紙色の本文ページは全ページ左タイトル。
+ *   中央のままなのは濃紺の divider / cover / contact だけ）
  * - スライドサイズは 16:9（1280x720）が既定。frontmatter にも `size: 16:9` を明記する
  * - 本文 22px / line-height 1.65（v2.3 で 25px から縮小。縮小で生まれた領域は文字数を増やす余地ではなく
  *   要素間の余白＝行間・箇条書き間・コールアウト前後に充てる設計）
@@ -18,6 +22,9 @@
  *   <!-- _class: lead contact -->               … 公開資料の最終ページ（会社・著者の関連リンク）
  *   <!-- _class: center -->                      … 結論・メッセージ主体のページを中央揃えに
  *                                                   （箇条書き・コールアウトは左揃えを維持する）
+ *   <p class="lead-in">リード文</p>              … タイトル直下の「このページで何を話すか」1 行（v3.0）
+ *   <div class="card"> を単独・全幅で縦に積む     … 全幅スタックカード（見出し + 弾丸 2〜3 個 × 2〜3 グループ。
+ *                                                   1 ページ 3 枠まで・入れ子禁止。v3.0）
  *   <!-- _class: divider -->                     … 章扉（v2.5 で追加。濃紺背景の目次兼用ページ。
  *                                                   全章の番号付きリストを置き、現在地の章だけ **太字** にする）
  *   <div class="columns"> A / B </div>          … 2 カラム（<div class="columns three"> で 3 カラム）
@@ -71,16 +78,39 @@ section {
   letter-spacing: 0.02em;
 }
 
-/* 見出し: 900 ウェイトで大きく。下線・バーなどの装飾は付けない
-   h1（ページタイトル）は全ページ中央揃え・1 行厳守（16:9では全角24〜26文字が目安） */
+/* 見出し: 900 ウェイトで大きく。
+   h1（ページタイトル）は左寄せ + 左縦バーで視線の起点を左上に固定する（v3.0）。1 行厳守。
+   縦バーは「読ませる資料」の古典的マーカーで、v2.1 で廃止した見出し下のゴールドバーとは別物 */
 section h1 {
-  font-size: 1.76em;
+  font-size: 1.6em;
   font-weight: 900;
-  line-height: 1.3;
+  line-height: 1.25;
   color: var(--zenshin-ink);
   letter-spacing: 0.01em;
-  margin-bottom: 0.65em;
+  margin-bottom: 0.45em;
+  text-align: left;
+  padding-left: 20px;
+  border-left: 10px solid var(--zenshin-ink);
+}
+
+/* 紙色の本文ページはタイトルを左で統一する（center ページも含む — v3.1。
+   center は本文ブロックの中央配置だけを担い、タイトル位置はデッキ全体でそろえる）。
+   濃紺の章扉（divider）・lead 系だけは構造が別物なので中央・固定配置のまま。
+   cover / contact の左揃えは後方の個別指定が上書きする */
+section.divider h1,
+section.lead h1 {
+  padding-left: 0;
+  border-left: 0;
   text-align: center;
+}
+
+/* リード文: タイトル直下に置く「このページで何を話すか」の 1 行（v3.0）。
+   本文よりわずかに弱い色で、タイトル → リード → 本文の階層を作る */
+section .lead-in {
+  margin: 0 0 1em;
+  color: #566173;
+  font-size: 0.98em;
+  line-height: 1.6;
 }
 
 section h2 {
@@ -382,13 +412,18 @@ section ol li::marker {
 }
 
 /* 観点名 + マーカーなしの説明を5項目ほど並べる、明確な2階層リスト。
-   16:9で短いリストが左へ寄って右側だけ空かないよう、単一の読み筋を中央カラムへ置く。
+   v3.0 で左揃えへ変更: 左寄せタイトル・リード文と左端をそろえ、視線の起点を左上に固定する。
    親項目だけに箇条書きマーカーを置き、説明は一段下げて自然に読ませる */
 section.detail-list > ul {
-  width: 82%;
-  max-width: 100%;
+  width: 100%;
   box-sizing: border-box;
   line-height: 1.45;
+  margin: 0.25em 0 0;
+}
+
+/* center と併用するページ（「結論から」など）は従来どおり中央のブロックとして置く */
+section.center.detail-list > ul {
+  width: auto;
   margin: 0.25em auto 0;
 }
 
@@ -413,16 +448,8 @@ section.detail-list > ul > li > ul > li::marker {
   content: '';
 }
 
-/* detail-listの補足も本文と同じ中央カラムへそろえ、リストと帯で重心を分けない */
-section.detail-list > .callout,
-section.detail-list > .note,
-section.detail-list > blockquote {
-  width: 82%;
-  max-width: 100%;
-  box-sizing: border-box;
-  margin-left: auto;
-  margin-right: auto;
-}
+/* detail-list の補足帯（callout / note）は v3.0 から全幅ルールに従う（左揃えの本文と左端がそろう）。
+   blockquote はページの結論としてグローバル既定の中央配置を維持する */
 
 /* 本文中の画像（挿絵・図）: 角丸 + 細枠。lead のロゴには適用しない */
 section:not(.lead) p img:not(.emoji) {
@@ -480,8 +507,26 @@ section .card {
   box-shadow: none;
 }
 
+/* 全幅スタックカード（v3.0）: section 直下に単独で置いたカードを縦に 2〜3 個積む。
+   見出し + 弾丸 2〜3 個のグループの境界を枠で示す。1 ページ 3 枠まで・入れ子禁止 */
+section > .card {
+  margin: 0.55em 0 0;
+  padding: 14px 24px 12px;
+}
+
 section .card h3 {
   margin-top: 0;
+  margin-bottom: 0.15em;
+  font-size: 1em;
+}
+
+section .card ul {
+  margin: 0.15em 0 0;
+}
+
+section .card li {
+  margin-bottom: 0.18em;
+  font-size: 0.97em;
 }
 
 /* 肯定／否定が明確な左右対比だけに使う意味色。
