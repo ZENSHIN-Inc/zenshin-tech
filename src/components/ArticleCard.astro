@@ -78,6 +78,9 @@ const CONTENT_TYPE_BADGE = {
 } as const;
 const badge = contentType ? CONTENT_TYPE_BADGE[contentType] : undefined;
 
+// 共有（Web Share API）用の絶対 URL（href はサイトルート相対）
+const absoluteUrl = new URL(href, Astro.site).href;
+
 /** 日付を YYYY.MM.DD 形式にフォーマット */
 function formatDate(date: Date): string {
   const y = date.getFullYear();
@@ -174,17 +177,28 @@ function formatDate(date: Date): string {
             <span class="sr-only">回</span>
           </span>
         )}
-        {pdfHref && (
-          <a
-            href={pdfHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="article-card-subnav-link relative z-20 ml-auto inline-flex items-center gap-1 rounded-full border-[1.5px] border-[#c4a97d] bg-white px-3 py-0.5 font-bold text-[#8c6f42] transition-[transform,opacity] hover:bg-[#c4a97d]/10 active:scale-95 active:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        <div class="relative z-20 ml-auto flex items-center gap-2.5">
+          <button
+            type="button"
+            data-share
+            data-share-url={absoluteUrl}
+            data-share-title={title}
+            aria-label={`「${title}」を共有`}
+            class="article-card-subnav-link text-muted-light transition-[color,transform,opacity] hover:text-primary active:scale-95 active:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            <Icon name="heroicons:document-arrow-down-20-solid" class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
-            PDF で開く<span class="sr-only">（新しいタブ）</span>
-          </a>
-        )}
+            <Icon name="heroicons:share-20-solid" class="h-4 w-4 [.is-copied_&]:hidden" aria-hidden="true" />
+            <Icon name="heroicons:check-20-solid" class="hidden h-4 w-4 text-success [.is-copied_&]:block" aria-hidden="true" />
+          </button>
+          {pdfHref && (
+            <a
+              href={pdfHref}
+              class="article-card-subnav-link inline-flex items-center gap-1 rounded-full border-[1.5px] border-[#c4a97d] bg-white px-3 py-0.5 font-bold text-[#8c6f42] transition-[transform,opacity] hover:bg-[#c4a97d]/10 active:scale-95 active:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <Icon name="heroicons:document-arrow-down-20-solid" class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+              PDF で開く
+            </a>
+          )}
+        </div>
       </div>
     </div>
   </article>
@@ -193,4 +207,29 @@ function formatDate(date: Date): string {
 <script>
   import { hydrateListViewCounts } from "@/lib/blog-views";
   hydrateListViewCounts();
+
+  // 共有: Web Share API（OS の共有シート）。非対応ブラウザは URL コピーに
+  // フォールバックし、1.5 秒だけチェックアイコンでフィードバックする
+  document.querySelectorAll<HTMLButtonElement>("[data-share]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const url = btn.dataset.shareUrl;
+      const title = btn.dataset.shareTitle;
+      if (!url) return;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, url });
+        } catch {
+          /* 共有シートのキャンセルは何もしない */
+        }
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        btn.classList.add("is-copied");
+        setTimeout(() => btn.classList.remove("is-copied"), 1500);
+      } catch {
+        /* clipboard 権限が取れない環境では何もしない */
+      }
+    });
+  });
 </script>

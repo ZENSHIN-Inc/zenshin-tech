@@ -41,7 +41,7 @@ export async function loadContentItems(): Promise<ContentItem[]> {
     slug: post.data.slug,
   }));
 
-  // スライド HTML は単体表示（サイトのヘッダーなし）なので新しいタブで開く
+  // スライドも同一タブで開く（ブラウザバックで一覧に戻れるようにする）
   const slideItems: ContentItem[] = slides.map((slide) => ({
     contentType: "slide",
     href: slide.data.urls.page,
@@ -50,7 +50,7 @@ export async function loadContentItems(): Promise<ContentItem[]> {
     description: slide.data.description,
     tags: slide.data.tags,
     date: slide.data.date,
-    external: true,
+    external: false,
     pdfHref: slide.data.urls.pdf,
   }));
 
