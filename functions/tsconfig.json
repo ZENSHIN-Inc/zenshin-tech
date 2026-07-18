@@ -1,0 +1,17 @@
+{
+  // Pages Functions（functions/）専用の型検査設定。
+  //
+  // ルートの tsconfig.json は astro check 用で DOM ライブラリを含む（src / scripts）。
+  // 一方 functions/ は Cloudflare Workers ランタイム上で動くため、
+  // `wrangler types` が wrangler.toml の binding から生成する
+  // ../worker-configuration.d.ts（Env / KVNamespace / PagesFunction 等）を使い、
+  // DOM ライブラリを外す（Workers と DOM の Request/Response 等の二重宣言衝突を回避）。
+  //
+  // 生成・型検査は `bun run cf-typegen` → `bun run typecheck`（package.json）。
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "types": []
+  },
+  "include": ["**/*", "../worker-configuration.d.ts"]
+}

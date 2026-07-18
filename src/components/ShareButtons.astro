@@ -11,7 +11,6 @@ import { Icon } from "astro-icon/components";
 interface Props {
   url: string;
   title: string;
-  authorName?: string;
   /** intent?hashtags= に渡すハッシュタグ（# なし、カンマ区切り） */
   hashtags?: string;
   /** 配置方向。vertical は左サイド sticky 用のアイコン縦並び（ラベル非表示） */
@@ -22,13 +21,12 @@ interface Props {
 const {
   url,
   title,
-  authorName,
-  hashtags = "ZENSHIN技術ブログ",
+  hashtags = "ZENSHINTech",
   orientation = "horizontal",
   class: className = "",
 } = Astro.props;
 
-const shareText = authorName ? `${title}｜${authorName}` : title;
+const shareText = title;
 const params = new URLSearchParams({
   text: shareText,
   url,

@@ -1,0 +1,19 @@
+# Cloudflare Pages 設定
+# Pages Functions（functions/）のランタイム設定に使用
+name = "zenshin-tech"
+compatibility_date = "2026-07-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare Pages は pages_build_output_dir が設定されて初めて wrangler.toml を
+# 「Pages 設定」として認識し、[[kv_namespaces]] 等の binding を deploy に適用する。
+# astro build の出力先 dist を指定（deploy.yml の `pages deploy dist` と一致）。
+pages_build_output_dir = "dist"
+
+# ブログ閲覧数カウンター用 Workers KV。
+# namespace は zenshin-infra の Terraform で払い出し（terraform/cloudflare/zenshin-tech.tf）。
+# id は terraform output（zenshin_tech_blog_views_id）の値を転記。
+# preview 環境は持たないため preview_id も同じ namespace を指す。
+[[kv_namespaces]]
+binding = "BLOG_VIEWS"
+id = "6ba3c4f425904b1f90725117110adf0a"
+preview_id = "6ba3c4f425904b1f90725117110adf0a"

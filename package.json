@@ -10,12 +10,13 @@
     "slides": "bun scripts/build-slides.ts",
     "build": "bun run slides && astro build && bunx pagefind --site dist",
     "preview": "astro preview",
-    "typecheck": "astro check",
+    "typecheck": "bun run cf-typegen && astro check && tsc --noEmit -p functions/tsconfig.json",
     "ci": "bun run sync:agent-docs:check && bun run build && bun run typecheck && bun run check",
     "check": "bun scripts/check-overflow.ts",
     "link-cards:refresh": "rm -rf public/link-cards .astro node_modules/.astro && bun run build",
     "sync:agent-docs": "bun scripts/sync-agent-docs.ts",
-    "sync:agent-docs:check": "bun scripts/sync-agent-docs.ts --check"
+    "sync:agent-docs:check": "bun scripts/sync-agent-docs.ts --check",
+    "cf-typegen": "wrangler types"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
   "homepage": "https://tech.zenshin-inc.co.jp/",
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@cloudflare/workers-types": "^5.20260718.1",
     "@fontsource/noto-sans-jp": "^5.2.9",
     "@iconify-json/heroicons": "^1.2.3",
     "@iconify-json/simple-icons": "^1.2.90",
@@ -36,7 +38,8 @@
     "sharp": "^0.35.3",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
-    "typescript-7": "npm:typescript@^7.0.2"
+    "typescript-7": "npm:typescript@^7.0.2",
+    "wrangler": "^4.112.0"
   },
   "engines": {
     "node": ">=26 <27"

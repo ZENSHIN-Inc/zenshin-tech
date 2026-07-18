@@ -6,10 +6,6 @@
  */
 export const ROUTES = {
   home: "/",
-  // 種別の一覧も専用 URL を切らず、トップのクエリパラメータで表現する
-  // （記事の個別 URL /blog/<slug>/ は blogPost() を参照）
-  blog: "/?type=article",
-  slides: "/?type=slide",
   rss: "/rss.xml",
 
   // 外部（コーポレートサイト）
@@ -25,4 +21,8 @@ export const ROUTES = {
   // OGP 画像 (1200x630 PNG)
   ogImageBlog: (slug: string) => `/og/blog/${slug}.png` as const,
   ogImageSite: "/og/site.png",
+
+  // Pages Functions API エンドポイント（ページではないため sitemap 非対象）
+  apiBlogViews: (slug: string) =>
+    `/api/views/${encodeURIComponent(slug)}` as const,
 } as const;

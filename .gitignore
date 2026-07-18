@@ -10,3 +10,6 @@ public/slides/
 public/assets/
 public/gallery/
 src/data/
+
+# wrangler types の生成物
+worker-configuration.d.ts

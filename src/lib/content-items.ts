@@ -19,6 +19,8 @@ export interface ContentItem {
   external: boolean;
   pdfHref?: string;
   isDraft?: boolean;
+  /** ブログ記事の slug（閲覧数カウンター用。スライドは持たない） */
+  slug?: string;
 }
 
 /** blog + slides を日付降順のコンテンツアイテム配列にして返す */
@@ -36,6 +38,7 @@ export async function loadContentItems(): Promise<ContentItem[]> {
     date: post.data.date,
     external: false,
     isDraft: !post.data.published,
+    slug: post.data.slug,
   }));
 
   // スライド HTML は単体表示（サイトのヘッダーなし）なので新しいタブで開く

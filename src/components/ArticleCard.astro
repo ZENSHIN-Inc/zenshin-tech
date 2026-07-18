@@ -45,6 +45,11 @@ interface Props {
   /** data-delay 用。スクロールインで順番に表示する時の遅延インデックス */
   delay?: string;
   /**
+   * 渡すと日付の隣に閲覧数（目アイコン + 数値）を表示する。値はブログ記事の
+   * slug。クライアント JS が /api/views/:slug を読んで埋める（スライドは渡さない）。
+   */
+  viewCountSlug?: string;
+  /**
    * true の場合、OGP サムネ左上に DRAFT バッジを重ねる。
    * `published: false` の記事を staging で確認するときに使う。
    */
@@ -63,6 +68,7 @@ const {
   linkable = false,
   delay,
   isDraft = false,
+  viewCountSlug,
 } = Astro.props;
 
 /** タイプバッジの表示定義（タグのゴールドと区別する紺系） */
@@ -155,6 +161,19 @@ function formatDate(date: Date): string {
         <time class="tabular-nums" datetime={date.toISOString()}>
           {formatDate(date)}
         </time>
+        {viewCountSlug && (
+          <span
+            class="inline-flex items-center gap-1"
+            data-view-count
+            data-view-slug={viewCountSlug}
+            hidden
+          >
+            <Icon name="heroicons:eye-20-solid" class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+            <span class="sr-only">閲覧数</span>
+            <span class="tabular-nums" data-view-count-value>0</span>
+            <span class="sr-only">回</span>
+          </span>
+        )}
         {pdfHref && (
           <a
             href={pdfHref}
@@ -170,3 +189,8 @@ function formatDate(date: Date): string {
     </div>
   </article>
 </li>
+
+<script>
+  import { hydrateListViewCounts } from "@/lib/blog-views";
+  hydrateListViewCounts();
+</script>

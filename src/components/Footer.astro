@@ -4,21 +4,15 @@
  */
 import { ROUTES } from "@/consts/routes";
 
+// トップの種別チップと重複するため「ブログ / スライド」の個別リンクは置かない
 const linkGroups = [
   {
-    heading: "コンテンツ",
+    heading: "リンク",
     links: [
-      { label: "ブログ", href: ROUTES.blog, external: false },
-      { label: "スライド", href: ROUTES.slides, external: false },
-      { label: "RSS", href: ROUTES.rss, external: false },
-    ],
-  },
-  {
-    heading: "株式会社ZENSHIN",
-    links: [
-      { label: "会社サイト", href: ROUTES.corporate, external: true },
+      { label: "ホームページ", href: ROUTES.corporate, external: true },
       { label: "お問い合わせ", href: ROUTES.corporateContact, external: true },
       { label: "X (@zenshin_inc)", href: "https://x.com/zenshin_inc", external: true },
+      { label: "RSS", href: ROUTES.rss, external: false },
     ],
   },
 ];
@@ -26,15 +20,15 @@ const linkGroups = [
 
 <footer class="bg-surface-dark">
   <div class="mx-auto max-w-6xl px-6 py-12 lg:px-8">
-    <div class="grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-[1.5fr_1fr_1fr] md:gap-8">
+    <div class="grid grid-cols-1 gap-y-8 md:grid-cols-[1.5fr_1fr] md:gap-8">
       <!-- ロゴ + 説明 -->
-      <div class="order-last col-span-2 max-w-xs md:order-none md:col-span-1">
+      <div class="order-last max-w-xs md:order-none">
         <a href={ROUTES.home} class="inline-flex items-center gap-2 active:opacity-70 active:scale-95">
           <img src="/assets/brand/ZENSHIN-logo-white.webp" alt="ZENSHIN Tech - ホームに戻る" width="120" height="28" class="h-6 w-auto" loading="lazy" />
           <span class="rounded-none bg-[linear-gradient(135deg,#e4d4a8,#c4a97d_55%,#8c6f42)] px-2 py-[5px] font-[Michroma] text-[10px] font-normal uppercase leading-none tracking-[0.18em] text-white">Tech</span>
         </a>
         <p class="mt-4 text-sm leading-relaxed text-white/80">
-          株式会社ZENSHINの技術メディア。<br />技術ブログ・スライドを公開しています。
+          株式会社ZENSHINの技術メディア<br />AI活用やプロダクト開発の技術知見をブログやスライド資料で発信しています
         </p>
       </div>
 

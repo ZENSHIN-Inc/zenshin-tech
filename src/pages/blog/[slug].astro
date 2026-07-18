@@ -70,7 +70,6 @@ const articleJsonLd = JSON.stringify({
 >
   <BreadcrumbJsonLd items={[
     { name: "ホーム", path: ROUTES.home },
-    { name: "ブログ", path: ROUTES.blog },
     { name: post.data.title, path: ROUTES.blogPost(post.data.slug) },
   ]} />
   <script is:inline type="application/ld+json" set:html={articleJsonLd} />
@@ -83,7 +82,6 @@ const articleJsonLd = JSON.stringify({
       <Breadcrumbs
         items={[
           { name: "ホーム", path: ROUTES.home },
-          { name: "ブログ", path: ROUTES.blog },
           { name: post.data.title },
         ]}
         class="mb-4"
@@ -92,6 +90,17 @@ const articleJsonLd = JSON.stringify({
         <time datetime={post.data.date.toISOString()} class="text-sm text-on-surface-dark/75">
           {formatDate(post.data.date)}
         </time>
+        <span
+          class="inline-flex items-center gap-1 text-sm text-on-surface-dark/75"
+          data-article-views
+          data-view-slug={post.data.slug}
+          hidden
+        >
+          <Icon name="heroicons:eye-20-solid" class="h-4 w-4 opacity-70" aria-hidden="true" />
+          <span class="sr-only">閲覧数</span>
+          <span class="tabular-nums" data-article-views-value>0</span>
+          <span class="sr-only">回</span>
+        </span>
         {!post.data.published && (
           <span
             class="inline-flex items-center rounded-sm bg-warning px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-surface-dark"
@@ -126,7 +135,6 @@ const articleJsonLd = JSON.stringify({
               <ShareButtons
                 url={articleUrl}
                 title={post.data.title}
-                authorName={authorName}
                 orientation="vertical"
               />
             </div>
@@ -160,7 +168,6 @@ const articleJsonLd = JSON.stringify({
                   <ShareButtons
                     url={articleUrl}
                     title={post.data.title}
-                    authorName={authorName}
                   />
                 </div>
               </div>
@@ -168,9 +175,9 @@ const articleJsonLd = JSON.stringify({
 
             {/* 一覧に戻る */}
             <div class="mt-8 border-t border-border pt-8">
-              <a href={ROUTES.blog} class="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-all active:opacity-70 active:scale-95">
+              <a href={ROUTES.home} class="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-all active:opacity-70 active:scale-95">
                 <Icon name="heroicons:arrow-left-20-solid" class="h-4 w-4" />
-                ブログ一覧に戻る
+                コンテンツ一覧に戻る
               </a>
             </div>
           </div>
@@ -323,3 +330,8 @@ const articleJsonLd = JSON.stringify({
     }
   </script>
 </BaseLayout>
+
+<script>
+  import { trackArticleView } from "@/lib/blog-views";
+  trackArticleView();
+</script>

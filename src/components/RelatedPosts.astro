@@ -58,6 +58,7 @@ const related = allPosts
           linkable
           delay={String(Math.min(i + 1, 3))}
           isDraft={!post.data.published}
+          viewCountSlug={post.data.slug}
         />
       ))}
     </ul>
