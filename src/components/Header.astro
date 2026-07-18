@@ -1,46 +1,80 @@
 ---
 /**
- * サイトヘッダー（ZENSHIN Tech）
+ * サイトヘッダー（ZENSHIN 技術ブログ）
  *
- * zenshin-hp と地続きの意匠（ダーク地 + 白ナビ）。
- * ロックアップは「ZENSHIN ロゴ + TECH 金チップ」（ロゴは h-7 を維持し、チップは垂直センター揃え）。
- * コンテンツ種別のナビ（ブログ/スライド）は持たず、会社サイトへのリンクのみ
- * （検索・絞り込みはトップページの一覧に統合されている）。
+ * zenshin-hp と同じスクロール挙動: ヒーロー（ダーク帯）上は透過 + 白ロゴ、
+ * スクロール後は白背景（blur + shadow）+ ダークロゴに切り替える。
+ * ロックアップは「ZENSHIN ロゴ + 技術ブログ 金チップ」（ロゴは h-7 を維持し、チップは垂直センター揃え）。
+ * ナビは持たずロックアップのみ（会社サイトへのリンクはフッターに集約、
+ * 検索・絞り込みはトップページの一覧に統合されている）。
  */
-import { Icon } from "astro-icon/components";
 import { ROUTES } from "@/consts/routes";
 ---
 
-<header id="site-header" class="fixed top-0 left-0 right-0 z-50 bg-surface-dark">
+<header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
   <div class="mx-auto max-w-6xl px-6 lg:px-8">
     <div class="flex h-20 items-center justify-between">
-      <!-- ロックアップ: ロゴ + TECH 金チップ（垂直センター揃え） -->
-      <a href={ROUTES.home} class="relative z-50 flex items-center gap-2.5 active:opacity-70 active:scale-95">
-        <img
-          src="/assets/brand/ZENSHIN-logo-white.webp"
-          alt="ZENSHIN"
-          width="140"
-          height="32"
-          class="h-7 w-auto"
-          loading="eager"
-          fetchpriority="high"
-        />
-        {/* ZENSHIN サブブランドバッジ（完全な四角・Michroma・金グラデ × 白抜き） */}
-        <span
-          class="rounded-none bg-[linear-gradient(135deg,#e4d4a8,#c4a97d_55%,#8c6f42)] px-[10px] py-[7px] font-[Michroma] text-[12px] font-normal uppercase leading-none tracking-[0.18em] text-white"
-        >
-          Tech
+      <!-- ロックアップ: ロゴ（白/黒をスクロールで切り替え） + 技術ブログ 金チップ（垂直センター揃え） -->
+      <a href={ROUTES.home} class="relative z-50 flex items-end gap-2.5 active:opacity-70 active:scale-95">
+        <span class="relative inline-block">
+          <img
+            id="header-logo"
+            src="/assets/brand/ZENSHIN-logo-white.webp"
+            alt="ZENSHIN"
+            width="140"
+            height="32"
+            class="h-7 w-auto transition-all duration-300"
+            loading="eager"
+            fetchpriority="high"
+          />
+          <img
+            id="header-logo-dark"
+            src="/assets/brand/ZENSHIN-logo.webp"
+            alt="ZENSHIN"
+            width="140"
+            height="32"
+            class="absolute top-0 left-0 h-7 w-auto opacity-0 transition-all duration-300"
+            loading="eager"
+          />
         </span>
-      </a>
-
-      <!-- 右側: ホームページ（コーポレートサイト）のみ（検索はトップページの一覧に統合） -->
-      <a
-        href={ROUTES.corporate}
-        class="inline-flex items-center gap-1 text-sm font-medium text-on-surface-dark/90 transition-all duration-200 hover:text-white active:opacity-70 active:scale-95"
-      >
-        <span>ホームページ</span>
-        <Icon name="heroicons:arrow-top-right-on-square-20-solid" class="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
+        {/* ZENSHIN サブブランドバッジ（完全な四角・白抜き）
+            高さと縦位置はロゴタイプの文字（N）に一致させ「文字列が連続している」見た目にする:
+            ロゴ画像 57px 中、文字は y=9〜53（高さ45・下端は画像下端の 3px 上）
+            → h-7(28px) 表示では 高さ 22px・下端オフセット 1.5px。
+            グラデはロゴのブランドゴールド #c4a97d から始めて「ロゴと地続き」に見せつつ、
+            白文字の視認性のため後半を濃い金に落とす */}
+        <span
+          class="mb-[1.5px] inline-flex h-[22px] items-center rounded-none bg-[linear-gradient(135deg,#c4a97d,#7a5f37_45%,#4a3a20)] px-[10px] text-[12px] font-bold leading-none tracking-[0.02em] text-white"
+        >
+          技術ブログ
+        </span>
       </a>
     </div>
   </div>
 </header>
+
+<script>
+  const header = document.getElementById("site-header");
+
+  // スクロール時: 背景・ロゴを切り替え（zenshin-hp と同じ挙動）
+  function onScroll() {
+    if (!header) return;
+    const scrolled = window.scrollY > 60;
+
+    // 背景
+    header.classList.toggle("scrolled", scrolled);
+    header.classList.toggle("bg-surface/95", scrolled);
+    header.classList.toggle("shadow-sm", scrolled);
+    header.classList.toggle("backdrop-blur-md", scrolled);
+
+    // ロゴ切り替え: ヒーロー上は白ロゴ、スクロール後は黒ロゴ
+    const logoWhite = document.getElementById("header-logo");
+    const logoDark = document.getElementById("header-logo-dark");
+    if (logoWhite && logoDark) {
+      logoWhite.classList.toggle("opacity-0", scrolled);
+      logoDark.classList.toggle("opacity-0", !scrolled);
+    }
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+</script>

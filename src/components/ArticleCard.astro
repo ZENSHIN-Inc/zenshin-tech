@@ -16,6 +16,7 @@
  * そのまま並べる。`delay` は data-animate のフェードアップアニメ遅延用。
  */
 import { Icon } from "astro-icon/components";
+import ShareMenu from "@/components/ShareMenu.astro";
 import { ROUTES } from "@/consts/routes";
 
 interface Props {
@@ -92,18 +93,28 @@ function formatDate(date: Date): string {
 
 <li data-animate data-delay={delay}>
   <article
-    class="article-card group relative flex h-full flex-col gap-4 transition-[transform,opacity] duration-150"
+    class="article-card relative flex h-full flex-col gap-4 transition-[transform,opacity] duration-150"
   >
     <div class="relative">
-      <img
-        src={ogImageSrc}
-        alt=""
-        width="1200"
-        height="630"
-        loading="lazy"
-        decoding="async"
-        class="strength-image aspect-1200/630 w-full rounded-xl object-cover ring-1 ring-surface-dark/10"
-      />
+      {/* サムネイル — タイトルと同じ遷移先へのリンク（a11y 上はタイトル側が本文リンクなので tab 対象から除外） */}
+      <a
+        href={href}
+        target={external ? "_blank" : undefined}
+        rel={external ? "noopener noreferrer" : undefined}
+        tabindex="-1"
+        aria-hidden="true"
+        class="article-card-main-link block"
+      >
+        <img
+          src={ogImageSrc}
+          alt=""
+          width="1200"
+          height="630"
+          loading="lazy"
+          decoding="async"
+          class="strength-image aspect-1200/630 w-full rounded-xl object-cover"
+        />
+      </a>
       {isDraft && (
         <span
           class="absolute left-2 top-2 z-10 inline-flex items-center rounded-sm bg-warning px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-surface-dark shadow"
@@ -115,13 +126,14 @@ function formatDate(date: Date): string {
     </div>
     <div class="flex flex-1 flex-col gap-2">
       <h3
-        class="text-base font-bold leading-snug text-primary transition-colors group-hover:text-accent md:text-lg"
+        class="text-base font-bold leading-snug text-primary transition-colors md:text-lg"
       >
+        {/* タイトルリンク — カード全面リンクはやめ、遷移するのはタイトルとサムネイルのみ */}
         <a
           href={href}
           target={external ? "_blank" : undefined}
           rel={external ? "noopener noreferrer" : undefined}
-          class="flex items-center before:absolute before:inset-0 before:z-0 before:content-[''] focus-visible:outline-none focus-visible:before:ring-2 focus-visible:before:ring-accent focus-visible:before:ring-offset-2 focus-visible:before:rounded-2xl"
+          class="article-card-main-link flex items-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           {/* タイトルが truncate されても外部リンクアイコンが隠れないよう flex で分離 */}
           <span class="truncate">{title}</span>
@@ -178,17 +190,6 @@ function formatDate(date: Date): string {
           </span>
         )}
         <div class="relative z-20 ml-auto flex items-center gap-2.5">
-          <button
-            type="button"
-            data-share
-            data-share-url={absoluteUrl}
-            data-share-title={title}
-            aria-label={`「${title}」を共有`}
-            class="article-card-subnav-link text-muted-light transition-[color,transform,opacity] hover:text-primary active:scale-95 active:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            <Icon name="heroicons:share-20-solid" class="h-4 w-4 [.is-copied_&]:hidden" aria-hidden="true" />
-            <Icon name="heroicons:check-20-solid" class="hidden h-4 w-4 text-success [.is-copied_&]:block" aria-hidden="true" />
-          </button>
           {pdfHref && (
             <a
               href={pdfHref}
@@ -198,6 +199,7 @@ function formatDate(date: Date): string {
               PDF で開く
             </a>
           )}
+          <ShareMenu url={absoluteUrl} title={title} variant="plain" ariaLabel={`「${title}」を共有`} />
         </div>
       </div>
     </div>
@@ -207,29 +209,4 @@ function formatDate(date: Date): string {
 <script>
   import { hydrateListViewCounts } from "@/lib/blog-views";
   hydrateListViewCounts();
-
-  // 共有: Web Share API（OS の共有シート）。非対応ブラウザは URL コピーに
-  // フォールバックし、1.5 秒だけチェックアイコンでフィードバックする
-  document.querySelectorAll<HTMLButtonElement>("[data-share]").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const url = btn.dataset.shareUrl;
-      const title = btn.dataset.shareTitle;
-      if (!url) return;
-      if (navigator.share) {
-        try {
-          await navigator.share({ title, url });
-        } catch {
-          /* 共有シートのキャンセルは何もしない */
-        }
-        return;
-      }
-      try {
-        await navigator.clipboard.writeText(url);
-        btn.classList.add("is-copied");
-        setTimeout(() => btn.classList.remove("is-copied"), 1500);
-      } catch {
-        /* clipboard 権限が取れない環境では何もしない */
-      }
-    });
-  });
 </script>

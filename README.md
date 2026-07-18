@@ -1,6 +1,6 @@
-# zenshin-tech — ZENSHIN Tech
+# zenshin-tech — ZENSHIN 技術ブログ
 
-株式会社ZENSHINの技術メディア **ZENSHIN Tech**（技術ブログ + スライド）。
+株式会社ZENSHINの技術ブログ **ZENSHIN 技術ブログ**（ブログ記事 + スライド）。
 Astro 7 製の静的サイトで、Marp スライドのビルドパイプラインを内蔵しています。
 
 - **公開 URL**: https://tech.zenshin-inc.co.jp/
@@ -105,7 +105,7 @@ bun run dev:marp   # Marp のライブプレビューだけ欲しいとき
 
 ## zenshin-hp との関係
 
-- 本サイト = 技術メディア（ZENSHIN Tech）、zenshin-hp = コーポレートサイト
+- 本サイト = 技術ブログ（ZENSHIN 技術ブログ）、zenshin-hp = コーポレートサイト
 - ブランド意匠（カラートークン・OGP デザイン・コンポーネント）は zenshin-hp 由来。
   HP 側のデザイン変更時は `src/styles/global.css` / `src/lib/og-image.ts` を追従させる
 - リンクカードのキャッシュ更新: `bun run link-cards:refresh`

@@ -1,6 +1,6 @@
 ---
 /**
- * トップページ（ZENSHIN Tech）
+ * トップページ（ZENSHIN 技術ブログ）
  * ブログ記事とスライドを日付降順でマージした技術コンテンツ一覧。
  * 右サイドに BlogSidebar（タグ・月別アーカイブ）を配置。
  *
@@ -33,18 +33,19 @@ const clientItems = allItems.map((item) => ({
 ---
 
 <BaseLayout
-  title="ZENSHIN Tech | 株式会社ZENSHINの技術メディア"
-  description="AI活用やプロダクト開発の技術知見をブログやスライド資料で発信する、株式会社ZENSHINの技術メディア"
+  title="ZENSHIN 技術ブログ | 株式会社ZENSHIN"
+  description="AI活用やプロダクト開発の技術知見を記事やスライド資料で発信する、株式会社ZENSHINの技術ブログ"
 >
   <Header />
 
-  <!-- ヒーロー帯 — メディア名 + 説明 -->
+  <!-- ヒーロー帯 — サイト名 + 説明 -->
   <section class="bg-surface-dark pt-28 pb-10">
     <div class="mx-auto max-w-6xl px-6 lg:px-8">
-      <p class="font-display text-sm font-bold tracking-[0.18em] text-[#d8c49a]">株式会社ZENSHIN 技術メディア</p>
-      <h1 class="mt-2 text-3xl font-bold text-on-surface-dark md:text-4xl">ZENSHIN Tech</h1>
+      <p class="font-display text-sm font-bold tracking-[0.18em] text-[#d8c49a]">株式会社ZENSHIN</p>
+      <h1 class="mt-2 text-3xl font-bold text-on-surface-dark md:text-4xl">ZENSHIN 技術ブログ</h1>
+      {/* 説明文 — 文節単位の inline-block で語中改行を防ぐ */}
       <p class="mt-3 max-w-2xl text-sm leading-relaxed text-[#d7dde6] md:text-base">
-        AI活用やプロダクト開発の技術知見をブログやスライド資料で発信しています
+        <span class="inline-block">AI活用や</span><span class="inline-block">プロダクト開発の</span><span class="inline-block">技術知見を</span><span class="inline-block">記事や</span><span class="inline-block">スライド資料で</span><span class="inline-block">発信しています</span>
       </p>
     </div>
   </section>

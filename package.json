@@ -2,7 +2,7 @@
   "name": "zenshin-tech",
   "version": "0.0.1",
   "private": true,
-  "description": "ZENSHIN の技術メディア ZENSHIN Tech（Astro + Marp + Cloudflare Pages）",
+  "description": "株式会社ZENSHIN の技術ブログ「ZENSHIN 技術ブログ」（Astro + Marp + Cloudflare Pages）",
   "type": "module",
   "scripts": {
     "dev": "bun run slides && astro dev",
@@ -50,7 +50,6 @@
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
     "@fontsource-variable/inter": "^5.2.8",
-    "@fontsource/michroma": "^5.2.8",
     "@tailwindcss/typography": "^0.5.20",
     "astro": "^7.1.0",
     "astro-icon": "^1.1.5",

@@ -1,8 +1,8 @@
-# zenshin-tech — ZENSHIN Tech
+# zenshin-tech — ZENSHIN 技術ブログ
 
 ## プロジェクト概要
 
-株式会社ZENSHINの技術メディア **ZENSHIN Tech**（技術ブログ + Marp スライド）。
+株式会社ZENSHINの技術ブログ **ZENSHIN 技術ブログ**（ブログ記事 + Marp スライド）。
 Astro 7 + Tailwind 4 の静的サイト（Cloudflare Pages）で、main に push すると GitHub Actions が自動でビルド・デプロイする（**push = 社外公開**）。
 
 - 公開 URL: https://tech.zenshin-inc.co.jp/
@@ -42,7 +42,7 @@ Astro 7 + Tailwind 4 の静的サイト（Cloudflare Pages）で、main に push
 
 ## zenshin-hp との関係
 
-- 本リポジトリ = 技術メディア、zenshin-hp = コーポレートサイト。ブログ・スライドは必ずこちらに置く
+- 本リポジトリ = 技術ブログ、zenshin-hp = コーポレートサイト。ブログ・スライドは必ずこちらに置く
 - `/index.json` は zenshin-hp がビルド時に fetch するフィード。**decks スキーマ（v1）を変えるときは HP 側ローダーと合わせて version を上げる**
 - ブランド意匠（`src/styles/global.css` のトークン・OGP デザイン・共通コンポーネント）は zenshin-hp 由来。HP 側の変更に追従させる
 

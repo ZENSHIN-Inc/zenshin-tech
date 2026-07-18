@@ -9,7 +9,7 @@ import Footer from "@/components/Footer.astro";
 import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd.astro";
 import BlogSidebar from "@/components/BlogSidebar.astro";
 import AuthorCard from "@/components/AuthorCard.astro";
-import ShareButtons from "@/components/ShareButtons.astro";
+import ShareMenu from "@/components/ShareMenu.astro";
 import RelatedPosts from "@/components/RelatedPosts.astro";
 import Breadcrumbs from "@/components/Breadcrumbs.astro";
 import { Icon } from "astro-icon/components";
@@ -63,7 +63,7 @@ const articleJsonLd = JSON.stringify({
 ---
 
 <BaseLayout
-  title={`${post.data.title} | ZENSHIN Tech`}
+  title={`${post.data.title} | ZENSHIN 技術ブログ`}
   description={post.data.description}
   ogType="article"
   ogImage={ROUTES.ogImageBlog(post.data.slug)}
@@ -132,10 +132,10 @@ const articleJsonLd = JSON.stringify({
             class="pointer-events-none absolute inset-y-2 -left-14 hidden w-12 xl:block"
           >
             <div class="pointer-events-auto sticky top-24">
-              <ShareButtons
+              <ShareMenu
                 url={articleUrl}
                 title={post.data.title}
-                orientation="vertical"
+                menuPosition="right-start"
               />
             </div>
           </div>
@@ -165,7 +165,7 @@ const articleJsonLd = JSON.stringify({
               <div class="flex items-center justify-between gap-4">
                 <AuthorCard authorId={post.data.author.id} class="min-w-0" />
                 <div class="shrink-0 xl:hidden">
-                  <ShareButtons
+                  <ShareMenu
                     url={articleUrl}
                     title={post.data.title}
                   />
@@ -224,7 +224,7 @@ const articleJsonLd = JSON.stringify({
 
   {/* コードブロックのコピー ボタン用アイコン — astro-icon でビルド時に SVG を展開し、
       クライアント側 JS は <template>.innerHTML で取り回す。手書き SVG を埋め込まず
-      他コンポーネント（ShareButtons 等）と heroicons の見た目を統一する */}
+      他コンポーネント（ShareMenu 等）と heroicons の見た目を統一する */}
   <template id="code-copy-icon-tpl"><Icon name="heroicons:document-duplicate" aria-hidden="true" /></template>
   <template id="code-check-icon-tpl"><Icon name="heroicons:check" aria-hidden="true" /></template>
 

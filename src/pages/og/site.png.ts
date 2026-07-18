@@ -8,7 +8,7 @@ import { renderOgImage } from "@/lib/og-image";
 export const GET: APIRoute = async () => {
   const png = await renderOgImage({
     label: "株式会社ZENSHIN",
-    title: "ZENSHIN Tech",
+    title: "ZENSHIN 技術ブログ",
   });
 
   return new Response(new Uint8Array(png), {

@@ -28,8 +28,8 @@ export const GET: APIRoute = async (context) => {
   ].sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
 
   return rss({
-    title: "ZENSHIN Tech",
-    description: "AI活用やプロダクト開発の技術知見をブログやスライド資料で発信する、株式会社ZENSHINの技術メディア",
+    title: "ZENSHIN 技術ブログ",
+    description: "AI活用やプロダクト開発の技術知見を記事やスライド資料で発信する、株式会社ZENSHINの技術ブログ",
     site: context.site ?? "https://tech.zenshin-inc.co.jp",
     items,
     customData: "<language>ja</language>",

@@ -1,0 +1,160 @@
+---
+/**
+ * シェアメニュー — 「四角 + 上矢印」のシェアボタンを押すと
+ * 「X で共有」「リンクをコピー」の 2 択メニューが開く（全シェア導線で共通）。
+ *
+ * X は OGP 画像（twitter:card=summary_large_image）を自動展開するため、
+ * URL を intent?url= に渡すだけで大きな画像カードが表示される。
+ */
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  url: string;
+  title: string;
+  /** intent?hashtags= に渡すハッシュタグ（# なし、カンマ区切り） */
+  hashtags?: string;
+  /** メニューの展開方向。bottom-end はボタン右下、right-start はボタン右横（左 sticky バー用） */
+  menuPosition?: "bottom-end" | "right-start";
+  /** トリガーの見た目。button = 白丸ボタン（記事ページ用）、plain = アイコンのみ（カードの行内用） */
+  variant?: "button" | "plain";
+  ariaLabel?: string;
+  class?: string;
+}
+
+const {
+  url,
+  title,
+  hashtags = "ZENSHIN技術ブログ",
+  menuPosition = "bottom-end",
+  variant = "button",
+  ariaLabel = "共有",
+  class: className = "",
+} = Astro.props;
+
+const params = new URLSearchParams({ text: title, url, hashtags });
+const xShareUrl = `https://twitter.com/intent/tweet?${params.toString()}`;
+
+const panelPositionClass =
+  menuPosition === "right-start" ? "left-full top-0 ml-2" : "right-0 top-full mt-2";
+
+const triggerClass =
+  variant === "button"
+    ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white text-muted transition-all hover:border-primary hover:text-primary active:scale-95 active:opacity-80"
+    : "inline-flex items-center justify-center text-muted-light transition-[color,transform,opacity] hover:text-primary active:scale-95 active:opacity-80";
+---
+
+<div class:list={["relative inline-block", className]} data-share-menu>
+  <button
+    type="button"
+    aria-haspopup="menu"
+    aria-expanded="false"
+    aria-label={ariaLabel}
+    data-share-menu-trigger
+    class:list={[
+      triggerClass,
+      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+    ]}
+  >
+    {/* X の共有アイコンと同じ「四角 + 上矢印」の線画（塗りつぶし無しのアウトライン版） */}
+    <Icon name="heroicons:arrow-up-on-square" class="h-[18px] w-[18px]" aria-hidden="true" />
+  </button>
+
+  <div
+    role="menu"
+    aria-label="共有方法"
+    data-share-menu-panel
+    hidden
+    class:list={[
+      "absolute z-40 min-w-44 rounded-xl border border-border bg-white p-1.5 shadow-lg",
+      panelPositionClass,
+    ]}
+  >
+    <a
+      role="menuitem"
+      href={xShareUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-share-menu-item
+      class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-alt active:opacity-70"
+    >
+      <Icon name="simple-icons:x" class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
+      X で共有
+    </a>
+    <button
+      type="button"
+      role="menuitem"
+      data-share-menu-copy
+      data-copy-url={url}
+      class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-alt active:opacity-70"
+    >
+      <Icon name="heroicons:link-20-solid" class="h-4 w-4 shrink-0 opacity-80 [[data-copied]_&]:hidden" aria-hidden="true" />
+      <Icon name="heroicons:check-20-solid" class="hidden h-4 w-4 shrink-0 text-success [[data-copied]_&]:block" aria-hidden="true" />
+      <span data-copy-label>リンクをコピー</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  // メニュー開閉（外側クリック・Escape で閉じる）
+  const menus = document.querySelectorAll<HTMLElement>("[data-share-menu]");
+
+  function closeAll(except?: HTMLElement) {
+    menus.forEach((menu) => {
+      if (menu === except) return;
+      menu.querySelector<HTMLElement>("[data-share-menu-panel]")?.setAttribute("hidden", "");
+      menu.querySelector<HTMLElement>("[data-share-menu-trigger]")?.setAttribute("aria-expanded", "false");
+    });
+  }
+
+  menus.forEach((menu) => {
+    const trigger = menu.querySelector<HTMLButtonElement>("[data-share-menu-trigger]");
+    const panel = menu.querySelector<HTMLElement>("[data-share-menu-panel]");
+    if (!trigger || !panel) return;
+
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = !panel.hasAttribute("hidden");
+      closeAll(menu);
+      if (isOpen) {
+        panel.setAttribute("hidden", "");
+        trigger.setAttribute("aria-expanded", "false");
+      } else {
+        panel.removeAttribute("hidden");
+        trigger.setAttribute("aria-expanded", "true");
+      }
+    });
+
+    // X 共有はリンク遷移後に閉じるだけでよい
+    panel.querySelector("[data-share-menu-item]")?.addEventListener("click", () => closeAll());
+
+    // リンクコピー: コピー成功のフィードバックを見せてから閉じる
+    const copyBtn = panel.querySelector<HTMLButtonElement>("[data-share-menu-copy]");
+    let resetTimer: ReturnType<typeof setTimeout> | null = null;
+    copyBtn?.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const url = copyBtn.dataset.copyUrl;
+      if (!url) return;
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        return;
+      }
+      copyBtn.setAttribute("data-copied", "");
+      const label = copyBtn.querySelector("[data-copy-label]");
+      if (label) label.textContent = "コピーしました";
+      if (resetTimer) clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => {
+        copyBtn.removeAttribute("data-copied");
+        if (label) label.textContent = "リンクをコピー";
+        closeAll();
+      }, 1200);
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!(e.target instanceof Element) || !e.target.closest("[data-share-menu]")) closeAll();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeAll();
+  });
+</script>

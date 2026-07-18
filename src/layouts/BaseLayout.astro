@@ -1,6 +1,6 @@
 ---
 /**
- * 全ページ共通のベースレイアウト（zenshin-hp から移植し ZENSHIN Tech 用に調整）
+ * 全ページ共通のベースレイアウト（zenshin-hp から移植し ZENSHIN 技術ブログ用に調整）
  * SEO メタデータ、OGP、JSON-LD、フォント、グローバルスタイルを管理
  */
 
@@ -9,10 +9,8 @@
 // 本文は OS 標準フォント（system-ui）を使うため、装飾英字用の Inter のみ読み込む
 // @ts-ignore - CSS パッケージのため型定義なし（ビルド・動作に問題なし）
 import "@fontsource-variable/inter";
-// TECH バッジ（ZENSHIN サブブランドバッジ）専用の書体。ZENSHIN ロゴタイプと同じ
-// Microgramma/Eurostile 系の Michroma を使う（TECH の 4 文字のみなので容量影響は軽微）
-// @ts-ignore - CSS パッケージのため型定義なし
-import "@fontsource/michroma";
+// 技術ブログバッジ（ZENSHIN サブブランドバッジ）はシステムゴシック太字を使うため
+// 専用 Web フォントは読み込まない（旧 TECH バッジの Michroma は撤去済み）
 // グローバルスタイル — 必ず frontmatter の ES import で読み込む
 // （astro.config.ts の build.inlineStylesheets: "always" と併せて全 CSS を HTML にインライン化）
 import "../styles/global.css";
@@ -102,7 +100,7 @@ const envRules = [
     <meta property="og:description" content={description} />
     <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalURL} />
-    <meta property="og:site_name" content="ZENSHIN Tech" />
+    <meta property="og:site_name" content="ZENSHIN 技術ブログ" />
     <meta property="og:locale" content="ja_JP" />
     <meta property="og:image" content={ogImageURL} />
     <meta property="og:image:width" content="1200" />
@@ -117,19 +115,19 @@ const envRules = [
     <meta name="twitter:image" content={ogImageURL} />
 
     <!-- RSS -->
-    <link rel="alternate" type="application/rss+xml" title="ZENSHIN Tech" href={ROUTES.rss} />
+    <link rel="alternate" type="application/rss+xml" title="ZENSHIN 技術ブログ" href={ROUTES.rss} />
 
     <!-- テーマカラー（ブラウザUI / モバイルステータスバー）— ダークヘッダーに合わせる -->
     <meta name="theme-color" content="#0c1220" />
 
-    <!-- JSON-LD 構造化データ — 技術メディアとしての WebSite + 運営元 Organization -->
+    <!-- JSON-LD 構造化データ — 技術ブログとしての WebSite + 運営元 Organization -->
     <script is:inline type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
-      "name": "ZENSHIN Tech",
+      "name": "ZENSHIN 技術ブログ",
       "url": `${siteUrl}${ROUTES.home}`,
-      "description": "AI活用やプロダクト開発の技術知見をブログやスライド資料で発信する、株式会社ZENSHINの技術メディア",
+      "description": "AI活用やプロダクト開発の技術知見を記事やスライド資料で発信する、株式会社ZENSHINの技術ブログ",
       "inLanguage": "ja",
       "publisher": {
         "@type": "Organization",
