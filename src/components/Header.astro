@@ -2,30 +2,19 @@
 /**
  * サイトヘッダー（ZENSHIN Tech）
  *
- * zenshin-hp の Header から移植。HP はヒーロー上で透明 → スクロールで白背景に
- * 切り替えるが、本サイトは全ページ共通の常時ダークヘッダーに単純化している
- * （ロゴ・ナビ色の切り替えスクリプトなし）。
+ * zenshin-hp と地続きの意匠（ダーク地 + 白ナビ）。
+ * ロックアップは「ZENSHIN ロゴ + TECH 金チップ」（ロゴは h-7 を維持し、チップは垂直センター揃え）。
+ * コンテンツ種別のナビ（ブログ/スライド）は持たず、検索と会社サイトのみ。
  */
 import { Icon } from "astro-icon/components";
 import { ROUTES } from "@/consts/routes";
-
-const navItems = [
-  { label: "ブログ", href: ROUTES.blog, external: false },
-  { label: "スライド", href: ROUTES.slides, external: false },
-  { label: "会社サイト", href: ROUTES.corporate, external: true },
-];
-
-const currentPath = Astro.url.pathname;
-
-const isActiveNavItem = (href: string) =>
-  href !== ROUTES.corporate && currentPath.startsWith(href);
 ---
 
-<header id="site-header" class="fixed top-0 left-0 right-0 z-50 bg-surface-dark/95 backdrop-blur-md">
+<header id="site-header" class="fixed top-0 left-0 right-0 z-50 bg-surface-dark">
   <div class="mx-auto max-w-6xl px-6 lg:px-8">
     <div class="flex h-20 items-center justify-between">
-      <!-- ロゴ + メディア名 -->
-      <a href={ROUTES.home} class="relative z-50 flex items-baseline gap-2 active:opacity-70 active:scale-95">
+      <!-- ロックアップ: ロゴ + TECH 金チップ（垂直センター揃え） -->
+      <a href={ROUTES.home} class="relative z-50 flex items-center gap-2.5 active:opacity-70 active:scale-95">
         <img
           src="/assets/brand/ZENSHIN-logo-white.webp"
           alt="ZENSHIN"
@@ -35,110 +24,111 @@ const isActiveNavItem = (href: string) =>
           loading="eager"
           fetchpriority="high"
         />
-        <span class="font-display text-lg font-bold tracking-wide text-label">Tech</span>
+        {/* ZENSHIN サブブランドバッジ（完全な四角・Michroma・金グラデ × 白抜き） */}
+        <span
+          class="rounded-none bg-[linear-gradient(135deg,#e4d4a8,#c4a97d_55%,#8c6f42)] px-[10px] py-[7px] font-[Michroma] text-[12px] font-normal uppercase leading-none tracking-[0.18em] text-white"
+        >
+          Tech
+        </span>
       </a>
 
-      <!-- デスクトップナビ -->
-      <nav class="hidden items-center gap-6 md:flex">
-        {navItems.map((item) => {
-          const isActive = isActiveNavItem(item.href);
-          return (
-            <a
-              href={item.href}
-              target={item.external ? "_blank" : undefined}
-              rel={item.external ? "noopener noreferrer" : undefined}
-              class="inline-flex items-center gap-1 text-sm font-medium text-on-surface-dark/90 transition-all duration-200 hover:text-white active:opacity-70 active:scale-95"
-              {...(isActive ? { "aria-current": "page" } : {})}
-            >
-              <span>{item.label}</span>
-              {item.external && (
-                <Icon name="heroicons:arrow-top-right-on-square-20-solid" class="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
-              )}
-            </a>
-          );
-        })}
-      </nav>
-
-      <!-- モバイル: メニューボタン -->
-      <div class="flex items-center gap-2 md:hidden">
+      <!-- 右側: 検索 + 会社サイト -->
+      <div class="flex items-center gap-2 md:gap-5">
         <button
-          id="menu-toggle"
-          class="relative z-50 flex h-12 w-12 items-center justify-center active:opacity-70 active:scale-90"
-          aria-label="メニュー"
-          aria-expanded="false"
+          id="search-open"
+          class="flex h-11 w-11 items-center justify-center rounded-lg text-on-surface-dark/90 transition-colors hover:text-white active:opacity-70 active:scale-95"
+          aria-label="サイト内検索"
         >
-          {/* ハンバーガーアイコン（3本線） */}
-          <svg id="menu-icon-open" class="h-6 w-6 text-white transition-all duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-          {/* 閉じるアイコン（×） */}
-          <svg id="menu-icon-close" class="h-6 w-6 text-white opacity-0 absolute transition-all duration-150" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <Icon name="heroicons:magnifying-glass-20-solid" class="h-5 w-5" aria-hidden="true" />
         </button>
+        <a
+          href={ROUTES.corporate}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hidden items-center gap-1 text-sm font-medium text-on-surface-dark/90 transition-all duration-200 hover:text-white active:opacity-70 active:scale-95 md:inline-flex"
+        >
+          <span>会社サイト</span>
+          <Icon name="heroicons:arrow-top-right-on-square-20-solid" class="h-3.5 w-3.5 opacity-60" aria-hidden="true" />
+        </a>
       </div>
     </div>
   </div>
 </header>
 
-<!-- モバイルメニュー（header の外に配置し、fixed 位置を確実にする） -->
-<div id="mobile-menu" class="pointer-events-none fixed inset-0 z-40 bg-surface-dark opacity-0 transition-opacity duration-300">
-  <div class="flex h-full flex-col items-center justify-center gap-8">
-    {navItems.map((item, i) => {
-      const isActive = isActiveNavItem(item.href);
-      return (
-        <a
-          href={item.href}
-          target={item.external ? "_blank" : undefined}
-          rel={item.external ? "noopener noreferrer" : undefined}
-          class="mobile-link flex w-72 max-w-[calc(100vw-3rem)] translate-y-4 items-center justify-center text-center text-xl font-medium text-on-surface-dark opacity-0 transition-all duration-500 hover:text-accent active:opacity-70 active:scale-95"
-          style={`transition-delay: ${120 + i * 50}ms`}
-          {...(isActive ? { "aria-current": "page" } : {})}
-        >
-          <span class="inline-flex items-center gap-1.5">
-            {item.label}
-            {item.external && (
-              <Icon name="heroicons:arrow-top-right-on-square-20-solid" class="h-4 w-4 opacity-60" aria-hidden="true" />
-            )}
-          </span>
-        </a>
-      );
-    })}
+<!-- 検索モーダル（Pagefind）。インデックスはビルド後に `pagefind --site dist` が生成する -->
+<div id="search-modal" class="fixed inset-0 z-[60] hidden" role="dialog" aria-modal="true" aria-label="サイト内検索">
+  <div id="search-overlay" class="absolute inset-0 bg-surface-dark/70 backdrop-blur-sm"></div>
+  <div class="relative mx-auto mt-20 w-[min(640px,calc(100vw-2rem))] rounded-2xl bg-white p-5 shadow-2xl md:mt-28">
+    <div id="pagefind-container" class="min-h-24"></div>
+    <p class="mt-3 text-right text-xs text-muted-light">Esc で閉じる</p>
   </div>
 </div>
 
-<script>
-  const toggle = document.getElementById("menu-toggle");
-  const menu = document.getElementById("mobile-menu");
-  const iconOpen = document.getElementById("menu-icon-open");
-  const iconClose = document.getElementById("menu-icon-close");
-  let open = false;
+{/* is:inline: Vite にバンドルさせない。バンドルすると動的 import が preload ヘルパーに
+    変換され、インラインスクリプトでは __VITE_PRELOAD__ が未置換のまま残って実行時エラーになる */}
+<script is:inline>
+  const openBtn = document.getElementById("search-open");
+  const modal = document.getElementById("search-modal");
+  const overlay = document.getElementById("search-overlay");
+  let initialized = false;
 
-  // メニュー開閉
-  toggle?.addEventListener("click", () => {
-    open = !open;
-    toggle.setAttribute("aria-expanded", String(open));
-    if (open) {
-      menu?.classList.remove("pointer-events-none", "opacity-0");
-      menu?.classList.add("pointer-events-auto", "opacity-100");
-      iconOpen?.classList.add("opacity-0");
-      iconClose?.classList.remove("opacity-0");
-      menu?.querySelectorAll(".mobile-link").forEach((l) => l.classList.remove("opacity-0", "translate-y-4"));
-      document.body.style.overflow = "hidden";
-      // メニュー展開時はメインコンテンツを不活性化（a11y）
-      document.querySelector("main")?.setAttribute("inert", "");
-    } else {
-      menu?.classList.add("pointer-events-none", "opacity-0");
-      menu?.classList.remove("pointer-events-auto", "opacity-100");
-      iconOpen?.classList.remove("opacity-0");
-      iconClose?.classList.add("opacity-0");
-      menu?.querySelectorAll(".mobile-link").forEach((l) => l.classList.add("opacity-0", "translate-y-4"));
-      document.body.style.overflow = "";
-      document.querySelector("main")?.removeAttribute("inert");
+  async function initPagefind() {
+    if (initialized) return;
+    initialized = true;
+    const container = document.getElementById("pagefind-container");
+    try {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "/pagefind/pagefind-ui.css";
+      document.head.appendChild(link);
+      // pagefind-ui.js は ESM export を持たず window.PagefindUI を定義するクラシックスクリプト
+      // （/pagefind/ は `pagefind --site dist` が生成するビルド成果物専用モジュール）
+      await import("/pagefind/pagefind-ui.js");
+      const PagefindUI = window.PagefindUI;
+      if (!PagefindUI) throw new Error("PagefindUI not found");
+      new PagefindUI({
+        element: "#pagefind-container",
+        showSubResults: true,
+        showImages: false,
+        translations: {
+          placeholder: "記事を検索",
+          zero_results: "「[SEARCH_TERM]」に一致する記事はありません",
+          clear_search: "クリア",
+          load_more: "さらに表示",
+          many_results: "[COUNT] 件の結果",
+          one_result: "1 件の結果",
+          searching: "検索中…",
+        },
+      });
+    } catch {
+      if (container) {
+        container.innerHTML =
+          '<p class="text-sm text-muted">検索インデックスがありません（`bun run build` 後の preview / 本番で有効になります）</p>';
+      }
+    }
+  }
+
+  function openSearch() {
+    modal?.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+    initPagefind().then(() => {
+      setTimeout(() => modal?.querySelector("input")?.focus(), 80);
+    });
+  }
+
+  function closeSearch() {
+    modal?.classList.add("hidden");
+    document.body.style.overflow = "";
+  }
+
+  openBtn?.addEventListener("click", openSearch);
+  overlay?.addEventListener("click", closeSearch);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !modal?.classList.contains("hidden")) closeSearch();
+    // Cmd/Ctrl + K でも開ける
+    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      openSearch();
     }
   });
-
-  menu?.querySelectorAll("a").forEach((a) =>
-    a.addEventListener("click", () => { if (open) toggle?.click(); })
-  );
 </script>

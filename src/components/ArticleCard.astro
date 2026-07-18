@@ -93,7 +93,7 @@ function formatDate(date: Date): string {
         height="630"
         loading="lazy"
         decoding="async"
-        class="strength-image aspect-1200/630 w-full object-cover"
+        class="strength-image aspect-1200/630 w-full rounded-xl object-cover ring-1 ring-surface-dark/10"
       />
       {isDraft && (
         <span
@@ -128,7 +128,7 @@ function formatDate(date: Date): string {
       </h3>
       <div class="relative z-20 flex flex-wrap gap-1.5">
         {badge && (
-          <span class="inline-flex shrink-0 items-center gap-0.5 rounded-sm bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+          <span class="inline-flex shrink-0 items-center gap-0.5 rounded-sm border border-[#c6cbd6] px-2 py-0.5 text-xs font-bold text-[#40495c]">
             <Icon name={badge.icon} class="h-3 w-3 opacity-70" />
             {badge.label}
           </span>
@@ -160,10 +160,10 @@ function formatDate(date: Date): string {
             href={pdfHref}
             target="_blank"
             rel="noopener noreferrer"
-            class="article-card-subnav-link relative z-20 ml-auto inline-flex items-center gap-0.5 font-bold text-label transition-[transform,opacity] hover:underline active:scale-95 active:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            class="article-card-subnav-link relative z-20 ml-auto inline-flex items-center gap-1 rounded-full border-[1.5px] border-[#c4a97d] bg-white px-3 py-0.5 font-bold text-[#8c6f42] transition-[transform,opacity] hover:bg-[#c4a97d]/10 active:scale-95 active:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             <Icon name="heroicons:document-arrow-down-20-solid" class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
-            PDF<span class="sr-only">版を新しいタブで開く</span>
+            PDF で開く<span class="sr-only">（新しいタブ）</span>
           </a>
         )}
       </div>

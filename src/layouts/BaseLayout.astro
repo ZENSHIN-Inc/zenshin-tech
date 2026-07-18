@@ -9,6 +9,10 @@
 // 本文は OS 標準フォント（system-ui）を使うため、装飾英字用の Inter のみ読み込む
 // @ts-ignore - CSS パッケージのため型定義なし（ビルド・動作に問題なし）
 import "@fontsource-variable/inter";
+// TECH バッジ（ZENSHIN サブブランドバッジ）専用の書体。ZENSHIN ロゴタイプと同じ
+// Microgramma/Eurostile 系の Michroma を使う（TECH の 4 文字のみなので容量影響は軽微）
+// @ts-ignore - CSS パッケージのため型定義なし
+import "@fontsource/michroma";
 // グローバルスタイル — 必ず frontmatter の ES import で読み込む
 // （astro.config.ts の build.inlineStylesheets: "always" と併せて全 CSS を HTML にインライン化）
 import "../styles/global.css";
