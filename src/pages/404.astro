@@ -1,0 +1,54 @@
+---
+/**
+ * カスタム404ページ（zenshin-hp から移植し ZENSHIN Tech 用に調整）
+ *
+ * Cloudflare Pages は dist/404.html が無いと未知の URL にトップページを
+ * 200 で返す（SPA フォールバック）ため、正しい 404 応答のためにも必須。
+ */
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import { ROUTES } from "@/consts/routes";
+---
+
+<BaseLayout
+  title="ページが見つかりません | ZENSHIN Tech"
+  description="お探しのページが見つかりませんでした。URLをご確認いただくか、トップページからお探しください。"
+  noindex={true}
+>
+  <Header />
+
+  <!-- ページタイトル帯（ヘッダーロゴの視認性確保） -->
+  <section class="bg-surface-dark pt-28 pb-10">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <h1 class="text-2xl font-bold text-on-surface-dark md:text-3xl lg:text-4xl">
+        ページが見つかりません
+      </h1>
+    </div>
+  </section>
+
+  <main id="main-content" class="flex flex-1 items-center justify-center bg-surface py-16 md:py-24">
+    <div class="mx-auto max-w-2xl px-6 text-center lg:px-8">
+      <p class="text-6xl font-bold text-primary md:text-8xl">404</p>
+      <p class="mt-4 text-lg text-muted">
+        お探しのページは移動または削除された可能性があります。
+      </p>
+      <div class="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+        <a
+          href={ROUTES.home}
+          class="inline-block rounded-lg bg-accent px-8 py-3 text-base font-bold text-white transition-colors duration-200 hover:bg-accent-hover"
+        >
+          トップページへ戻る
+        </a>
+        <a
+          href={ROUTES.blog}
+          class="inline-block rounded-lg border border-border px-8 py-3 text-base font-bold text-on-surface transition-colors duration-200 hover:bg-surface-alt"
+        >
+          ブログ一覧を見る
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
