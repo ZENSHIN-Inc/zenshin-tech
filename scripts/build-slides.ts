@@ -136,11 +136,16 @@ const decks: Deck[] = slideFiles.map((file) => {
 // 3. Marp ビルド + OGP 画像生成
 // ---------------------------------------------------------------------------
 
-// タイトルの幅検証（OGP で自動改行が発生しない長さかをブログと同じ基準でチェック）
+// タイトルの幅検証（OGP で自動改行が発生しない長さかをブログと同じ基準でチェック）と
+// タグ数の検証（ブログと同じく 5〜6 個必須）
 for (const deck of decks) {
   const error = validateTitleWidth(deck.title);
   if (error) {
     console.error(`slides/${deck.base}.md: ${error}`);
+    process.exit(1);
+  }
+  if (deck.tags.length < 5 || deck.tags.length > 6) {
+    console.error(`slides/${deck.base}.md: tags は 5〜6 個必須です（現在 ${deck.tags.length} 個）`);
     process.exit(1);
   }
 }

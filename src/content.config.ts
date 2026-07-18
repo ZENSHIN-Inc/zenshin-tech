@@ -23,8 +23,8 @@ const blog = defineCollection({
       if (error) ctx.addIssue({ code: "custom", message: error });
     }),
     date: z.coerce.date(),
-    // 複数タグ対応。最低 1 個必須（サイドナビ・タグページ生成の前提）、最大 6 個
-    tags: z.array(z.string()).min(1).max(6),
+    // タグは必ず 5〜6 個付ける（トップの絞り込み・回遊性の前提。少なすぎる付け方を防ぐ）
+    tags: z.array(z.string()).min(5).max(6),
     description: z.string(),
     slug: z.string(),
     // 著者（authors collection の ID 参照）。存在しない ID はビルド時にエラー
@@ -55,8 +55,8 @@ const slides = defineCollection({
     title: z.string(),
     description: z.string(),
     date: z.coerce.date(),
-    // タグはブログと共通の概念（サイドバー・/tags/ ページで合算集計する）
-    tags: z.array(z.string()).default([]),
+    // タグはブログと共通の概念（サイドバー・トップの絞り込みで合算集計する）。5〜6 個必須
+    tags: z.array(z.string()).min(5).max(6),
     author: reference("authors"),
     // すべてサイトルート相対パス（/slides/...）。フィードや OGP では絶対 URL 化して使う
     urls: z.object({

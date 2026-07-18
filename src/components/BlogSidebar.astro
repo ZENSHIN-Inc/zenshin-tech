@@ -14,19 +14,11 @@ import { ROUTES } from "@/consts/routes";
 import { loadContentItems, toYearMonth } from "@/lib/content-items";
 
 interface Props {
-  /** 現在開いているタグ（ハイライト用）。タグ別一覧ページで指定 */
-  currentTag?: string;
-  /** 現在開いている月（"YYYY-MM" 形式、ハイライト用）。月別アーカイブページで指定 */
-  currentYearMonth?: string;
   /** 外枠に追加するクラス（親側で sticky や余白を調整） */
   class?: string;
 }
 
-const {
-  currentTag,
-  currentYearMonth,
-  class: className = "",
-} = Astro.props;
+const { class: className = "" } = Astro.props;
 
 const items = await loadContentItems();
 
@@ -68,18 +60,12 @@ const months = [...monthCounts.entries()]
     {tags.length > 0 ? (
       <ul class="flex flex-wrap gap-1.5">
         {tags.map(({ tag, count }) => {
-          const isActive = currentTag === tag;
           return (
             <li>
               <a
                 href={ROUTES.tag(tag)}
-                aria-current={isActive ? "page" : undefined}
-                class:list={[
-                  "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-bold transition-[background-color,transform,opacity] active:scale-95 active:opacity-80",
-                  isActive
-                    ? "bg-label text-white"
-                    : "bg-label/10 text-label hover:bg-label/20",
-                ]}
+                data-filter-tag={tag}
+                class="inline-flex items-center gap-1 rounded-sm bg-label/10 px-2 py-0.5 text-xs font-bold text-label transition-[background-color,transform,opacity] hover:bg-label/20 active:scale-95 active:opacity-80"
               >
                 <span class="inline-flex items-center gap-0.5">
                   <Icon name="heroicons:hashtag-20-solid" class="h-3 w-3 opacity-70" />{tag}
@@ -101,18 +87,12 @@ const months = [...monthCounts.entries()]
     {months.length > 0 ? (
       <ul class="flex flex-wrap gap-1.5">
         {months.map(({ yearMonth, label, count }) => {
-          const isActive = currentYearMonth === yearMonth;
           return (
             <li>
               <a
                 href={ROUTES.archive(yearMonth)}
-                aria-current={isActive ? "page" : undefined}
-                class:list={[
-                  "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-bold transition-[background-color,transform,opacity] active:scale-95 active:opacity-80",
-                  isActive
-                    ? "bg-label text-white"
-                    : "bg-label/10 text-label hover:bg-label/20",
-                ]}
+                data-filter-month={yearMonth}
+                class="inline-flex items-center gap-1 rounded-sm bg-label/10 px-2 py-0.5 text-xs font-bold text-label transition-[background-color,transform,opacity] hover:bg-label/20 active:scale-95 active:opacity-80"
               >
                 <span class="inline-flex items-center gap-0.5 tabular-nums">
                   <Icon name="heroicons:calendar-20-solid" class="h-3 w-3 opacity-70" />{label}

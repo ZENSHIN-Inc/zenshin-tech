@@ -1,0 +1,8 @@
+# Cloudflare Pages リダイレクト定義
+# https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# /blog/ と /slides/ の一覧ページは廃止し、トップのクエリパラメータ絞り込みに統合した。
+# zenshin-hp からの /blog/* 301 チェーン（www/blog/ → tech/blog/）や旧リンクの受け皿として
+# 一覧 URL だけトップへ 301 する（記事の個別 URL /blog/<slug>/ は実ページが存在する）
+/blog/ /?type=article 301
+/slides/ /?type=slide 301

@@ -6,8 +6,10 @@
  */
 export const ROUTES = {
   home: "/",
-  blog: "/blog/",
-  slides: "/slides/",
+  // 種別の一覧も専用 URL を切らず、トップのクエリパラメータで表現する
+  // （記事の個別 URL /blog/<slug>/ は blogPost() を参照）
+  blog: "/?type=article",
+  slides: "/?type=slide",
   rss: "/rss.xml",
 
   // 外部（コーポレートサイト）
@@ -16,9 +18,9 @@ export const ROUTES = {
 
   // 動的ルート
   blogPost: (slug: string) => `/blog/${slug}/` as const,
-  // タグ・月別アーカイブはブログ + スライド共通
-  tag: (tag: string) => `/tags/${encodeURIComponent(tag)}/` as const,
-  archive: (yearMonth: string) => `/archive/${yearMonth}/` as const,
+  // タグ・月別の絞り込みは専用 URL を切らず、トップのクエリパラメータで表現する
+  tag: (tag: string) => `/?tag=${encodeURIComponent(tag)}` as const,
+  archive: (yearMonth: string) => `/?month=${yearMonth}` as const,
 
   // OGP 画像 (1200x630 PNG)
   ogImageBlog: (slug: string) => `/og/blog/${slug}.png` as const,

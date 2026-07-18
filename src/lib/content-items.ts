@@ -13,6 +13,7 @@ export interface ContentItem {
   href: string;
   ogImageSrc: string;
   title: string;
+  description: string;
   tags: string[];
   date: Date;
   external: boolean;
@@ -30,6 +31,7 @@ export async function loadContentItems(): Promise<ContentItem[]> {
     href: ROUTES.blogPost(post.data.slug),
     ogImageSrc: ROUTES.ogImageBlog(post.data.slug),
     title: post.data.title,
+    description: post.data.description,
     tags: post.data.tags,
     date: post.data.date,
     external: false,
@@ -42,6 +44,7 @@ export async function loadContentItems(): Promise<ContentItem[]> {
     href: slide.data.urls.page,
     ogImageSrc: slide.data.urls.ogImage,
     title: slide.data.title,
+    description: slide.data.description,
     tags: slide.data.tags,
     date: slide.data.date,
     external: true,

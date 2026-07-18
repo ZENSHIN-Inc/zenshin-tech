@@ -2,16 +2,34 @@
 /**
  * トップページ（ZENSHIN Tech）
  * ブログ記事とスライドを日付降順でマージした技術コンテンツ一覧。
- * 右サイドに BlogSidebar（タグ・月別アーカイブ）を配置
+ * 右サイドに BlogSidebar（タグ・月別アーカイブ）を配置。
+ *
+ * 検索・絞り込みはすべてこのページのクエリパラメータで表現する（専用 URL は切らない）:
+ *   /?q=検索語        — キーワード検索（タイトル・説明・タグ + 記事本文は Pagefind 全文検索）
+ *   /?type=article    — 種別絞り込み（article | slide。検索ボックス横の簡易フィルタ）
+ *   /?tag=AI          — タグ絞り込み（サイドバー・カードのタグチップのリンク先）
+ *   /?month=2026-07   — 月別絞り込み
+ * 全カードを静的に描画したうえで、クライアント側 JS が表示/非表示を切り替える
  */
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import ArticleCard from "@/components/ArticleCard.astro";
 import BlogSidebar from "@/components/BlogSidebar.astro";
-import { loadContentItems } from "@/lib/content-items";
+import { Icon } from "astro-icon/components";
+import { loadContentItems, toYearMonth } from "@/lib/content-items";
 
 const allItems = await loadContentItems();
+
+// クライアント側フィルタ用のメタデータ（href をキーにカードと突き合わせる）
+const clientItems = allItems.map((item) => ({
+  href: item.href,
+  type: item.contentType,
+  title: item.title,
+  description: item.description,
+  tags: item.tags,
+  ym: toYearMonth(item.date),
+}));
 ---
 
 <BaseLayout
@@ -40,38 +58,63 @@ const allItems = await loadContentItems();
           </h2>
         </div>
 
-        <div class="mt-10 lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_260px]">
+        <div class="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_260px]">
           {/* 記事・スライドのグリッド */}
           <div class="min-w-0">
-            {
-              allItems.length > 0 ? (
-                <ul class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2">
-                  {allItems.map((item, i) => (
-                    <ArticleCard
-                      href={item.href}
-                      ogImageSrc={item.ogImageSrc}
-                      title={item.title}
-                      tags={item.tags}
-                      date={item.date}
-                      contentType={item.contentType}
-                      external={item.external}
-                      pdfHref={item.pdfHref}
-                      linkable
-                      delay={String(Math.min(i + 1, 5))}
-                      isDraft={item.isDraft}
-                    />
-                  ))}
-                </ul>
-              ) : (
-                <div class="text-center">
-                  <p class="text-lg text-muted">コンテンツはまだありません。</p>
-                </div>
-              )
-            }
+            {/* 検索ボックス + 絞り込み状態 */}
+            <div class="mb-8">
+              <label class="relative block">
+                <Icon
+                  name="heroicons:magnifying-glass-20-solid"
+                  class="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-light"
+                  aria-hidden="true"
+                />
+                <input
+                  id="content-search"
+                  type="search"
+                  placeholder="検索（タイトル・本文・タグ）"
+                  autocomplete="off"
+                  class="w-full rounded-xl border border-border bg-white py-2.5 pl-10 pr-4 text-sm text-on-surface shadow-sm outline-none transition-colors placeholder:text-muted-light focus:border-label"
+                />
+              </label>
+              <div class="mt-3 flex items-center gap-1.5" role="group" aria-label="種別で絞り込み">
+                <button type="button" data-type-chip="" class="type-chip rounded-full border border-border bg-white px-3.5 py-1 text-xs font-bold text-muted transition-colors hover:border-label active:scale-95">すべて</button>
+                <button type="button" data-type-chip="article" class="type-chip rounded-full border border-border bg-white px-3.5 py-1 text-xs font-bold text-muted transition-colors hover:border-label active:scale-95">記事</button>
+                <button type="button" data-type-chip="slide" class="type-chip rounded-full border border-border bg-white px-3.5 py-1 text-xs font-bold text-muted transition-colors hover:border-label active:scale-95">スライド資料</button>
+              </div>
+              <div id="filter-status" class="mt-3 hidden flex-wrap items-center gap-2 text-sm text-muted">
+                <span id="filter-count" class="font-bold tabular-nums text-primary"></span>
+                <span>件のコンテンツ</span>
+                <a href="/" class="ml-1 inline-flex items-center gap-0.5 text-xs font-bold text-label hover:underline">
+                  <Icon name="heroicons:x-mark-20-solid" class="h-3.5 w-3.5" aria-hidden="true" />絞り込みを解除
+                </a>
+              </div>
+            </div>
+
+            <ul id="content-list" class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2">
+              {allItems.map((item, i) => (
+                <ArticleCard
+                  href={item.href}
+                  ogImageSrc={item.ogImageSrc}
+                  title={item.title}
+                  tags={item.tags}
+                  date={item.date}
+                  contentType={item.contentType}
+                  external={item.external}
+                  pdfHref={item.pdfHref}
+                  linkable
+                  delay={String(Math.min(i + 1, 5))}
+                  isDraft={item.isDraft}
+                />
+              ))}
+            </ul>
+            <p id="empty-state" class="hidden py-16 text-center text-lg text-muted">
+              該当するコンテンツがありません。
+            </p>
           </div>
 
           {/* サイドバー */}
-          <aside class="mt-12 lg:mt-0" aria-label="ブログナビゲーション">
+          <aside class="mt-12 lg:mt-0" aria-label="コンテンツナビゲーション">
             <BlogSidebar class="lg:sticky lg:top-24" />
           </aside>
         </div>
@@ -80,4 +123,159 @@ const allItems = await loadContentItems();
   </main>
 
   <Footer />
+
+  {/* クライアント側フィルタ用メタデータ（</script> 誤終端を防ぐため < をエスケープ） */}
+  <script
+    is:inline
+    type="application/json"
+    id="content-items-data"
+    set:html={JSON.stringify(clientItems).replaceAll("<", "\\u003c")}
+  />
+
+  {/* is:inline: Pagefind の動的 import を Vite にバンドルさせない（__VITE_PRELOAD__ 未置換問題の回避） */}
+  <script is:inline>
+    (function () {
+      const data = JSON.parse(document.getElementById("content-items-data").textContent);
+      const byHref = new Map(data.map((i) => [i.href, i]));
+      const list = document.getElementById("content-list");
+      const cards = [...list.querySelectorAll(":scope > li")].map((li) => ({
+        li,
+        item: byHref.get(li.querySelector("h3 a")?.getAttribute("href")),
+      }));
+      const input = document.getElementById("content-search");
+      const status = document.getElementById("filter-status");
+      const countEl = document.getElementById("filter-count");
+      const empty = document.getElementById("empty-state");
+
+      const params = new URLSearchParams(location.search);
+      const state = {
+        q: params.get("q") ?? "",
+        type: params.get("type"),
+        tag: params.get("tag"),
+        month: params.get("month"),
+      };
+      input.value = state.q;
+
+      // 種別チップ（すべて / 記事 / スライド資料）
+      const typeChips = [...document.querySelectorAll("[data-type-chip]")];
+      function renderTypeChips() {
+        for (const chip of typeChips) {
+          const active = (chip.dataset.typeChip || null) === state.type;
+          chip.classList.toggle("bg-surface-dark", active);
+          chip.classList.toggle("text-white", active);
+          chip.classList.toggle("border-surface-dark", active);
+          chip.classList.toggle("bg-white", !active);
+          chip.classList.toggle("text-muted", !active);
+          chip.classList.toggle("border-border", !active);
+        }
+      }
+      function syncUrl() {
+        const p = new URLSearchParams(location.search);
+        if (state.q.trim()) p.set("q", state.q.trim());
+        else p.delete("q");
+        if (state.type) p.set("type", state.type);
+        else p.delete("type");
+        const qs = p.toString();
+        history.replaceState(null, "", qs ? `?${qs}` : location.pathname);
+      }
+      for (const chip of typeChips) {
+        chip.addEventListener("click", () => {
+          state.type = chip.dataset.typeChip || null;
+          renderTypeChips();
+          syncUrl();
+          apply();
+        });
+      }
+      renderTypeChips();
+
+      // サイドバーのタグ・月チップのアクティブ表示
+      for (const a of document.querySelectorAll("[data-filter-tag]")) {
+        if (a.dataset.filterTag === state.tag) {
+          a.classList.remove("bg-label/10", "text-label", "hover:bg-label/20");
+          a.classList.add("bg-label", "text-white");
+        }
+      }
+      for (const a of document.querySelectorAll("[data-filter-month]")) {
+        if (a.dataset.filterMonth === state.month) {
+          a.classList.remove("bg-label/10", "text-label", "hover:bg-label/20");
+          a.classList.add("bg-label", "text-white");
+        }
+      }
+
+      // Pagefind（記事本文の全文検索）。初回の検索時に遅延読み込みする
+      let pagefind = null;
+      async function fullTextHrefs(q) {
+        try {
+          if (!pagefind) {
+            pagefind = await import("/pagefind/pagefind.js");
+            await pagefind.init?.();
+          }
+          const res = await pagefind.search(q);
+          const hrefs = new Set();
+          for (const r of res.results.slice(0, 30)) {
+            const d = await r.data();
+            hrefs.add(new URL(d.url, location.origin).pathname);
+          }
+          return hrefs;
+        } catch {
+          return new Set(); // dev などインデックスが無い環境ではメタデータ検索のみ
+        }
+      }
+
+      function localMatch(item, q) {
+        const hay = `${item.title} ${item.description} ${item.tags.join(" ")}`.toLowerCase();
+        return q
+          .toLowerCase()
+          .split(/\s+/)
+          .filter(Boolean)
+          .every((w) => hay.includes(w));
+      }
+
+      let applyToken = 0;
+      async function apply() {
+        const token = ++applyToken;
+        const q = state.q.trim();
+        const ftHrefs = q ? await fullTextHrefs(q) : new Set();
+        if (token !== applyToken) return; // 入力が進んでいたら破棄
+
+        let visible = 0;
+        for (const { li, item } of cards) {
+          let show = !!item;
+          if (show && state.type) show = item.type === state.type;
+          if (show && state.tag) show = item.tags.includes(state.tag);
+          if (show && state.month) show = item.ym === state.month;
+          if (show && q) show = localMatch(item, q) || ftHrefs.has(item.href);
+          li.style.display = show ? "" : "none";
+          if (show) visible++;
+        }
+        empty.classList.toggle("hidden", visible > 0);
+
+        const filtered = q || state.type || state.tag || state.month;
+        status.classList.toggle("hidden", !filtered);
+        status.classList.toggle("flex", !!filtered);
+        countEl.textContent = String(visible);
+      }
+
+      // 入力 → URL（replaceState）と表示を同期
+      let debounceId = null;
+      input.addEventListener("input", () => {
+        state.q = input.value;
+        if (debounceId !== null) clearTimeout(debounceId);
+        debounceId = setTimeout(() => {
+          syncUrl();
+          apply();
+        }, 200);
+      });
+
+      // Cmd/Ctrl + K で検索ボックスへフォーカス
+      document.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+          e.preventDefault();
+          input.focus();
+        }
+      });
+
+      apply();
+    })();
+  </script>
 </BaseLayout>
