@@ -137,7 +137,7 @@ const articleJsonLd = JSON.stringify({
               {post.data.tags.map((tag) => (
                 <li>
                   <a
-                    href={ROUTES.blogTag(tag)}
+                    href={ROUTES.tag(tag)}
                     class="inline-flex items-center gap-0.5 rounded-sm bg-label/10 px-2 py-0.5 text-xs font-bold text-label transition-colors hover:bg-label/20 active:scale-95 active:opacity-80"
                   >
                     <Icon name="heroicons:hashtag-20-solid" class="h-3 w-3 opacity-70" />{tag}

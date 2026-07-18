@@ -230,7 +230,7 @@ description: >
 - 16:9のYes / Noフローは原則`flowchart LR`、質問5個程度まで、1ノード2行以内にする。横長の本文領域を使い、図だけなら`w:960`〜`w:1000`、ページの結論文と同居する場合は`w:900`〜`w:960`を目安にする。到達点は質問ノードと形を分け、標準テーマの可読性を壊す独自配色を増やさない
 - SVG生成後、対象ページをPNGとPDFで目視し、文字、矢印、分岐ラベル、余白を確認する
 - MermaidなどのSVG図は内部に輪郭を持つため、写真用の角丸枠を付けない。スライド背景へ直接置き、図の中身と外枠を二重に囲わない
-- 詳細と判断根拠は`docs/mermaid-in-marp.md`を参照する
+- 詳細と判断根拠は`references/mermaid-in-marp.md`を参照する
 
 ## references/（Marp 汎用リファレンス）
 
@@ -241,6 +241,10 @@ Marp の構文・仕組みで迷ったら読む。出所: https://github.com/sof
 - `references/theme-css-guide.md` — テーマ CSS の設計（`themes/zenshin.css` を保守するとき）
 - `references/advanced-features.md` — 数式・絵文字・Marp CLI・VS Code 連携
 - `references/official-themes.md` — marp-core 公式テーマ（zenshin テーマは default を `@import` して拡張している）
+
+本リポジトリ固有のリファレンス（softaworks 由来ではない）:
+
+- `references/mermaid-in-marp.md` — Marp で Mermaid を安定して使う方法の詳細・判断根拠・参考リンク（SVG 事前生成方式）
 
 ## やらないこと / 注意
 

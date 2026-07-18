@@ -33,6 +33,7 @@ export const GET: APIRoute = async ({ site }) => {
       title: s.data.title,
       description: s.data.description,
       date: toDateString(s.data.date),
+      tags: s.data.tags,
       author: s.data.author.id,
       urls: {
         page: abs(s.data.urls.page),

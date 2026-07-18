@@ -13,7 +13,7 @@ description: >
 
 > Claude Code 用の派生スキルです。正本は `docs/agent-instructions/skills/gallery-image-gen/SKILL.md.liquid`。`bun run sync:agent-docs` で生成するため、直接編集しないでください。
 
-> **Core Principle**: 画像生成は **Codex の組み込み `image_gen`（gpt-image-2）** で行い、**ChatGPT サブスク内で完結させる（OpenAI API の従量課金ルートに入らない）**。生成した画像は `gallery/<YYYYMM>-<slug>/` に置き、main に push されると https://tech.zenshin-inc.co.jp/gallery/ で公開される。
+> **Core Principle**: 画像生成は **Codex の組み込み `image_gen`（gpt-image-2）** で行い、**ChatGPT サブスク内で完結させる（OpenAI API の従量課金ルートに入らない）**。生成した画像は `gallery/<YYYYMM>-<slug>/` に置き、main に push されると `https://tech.zenshin-inc.co.jp/gallery/<フォルダ>/<ファイル>` で配信される（公開一覧ページはない。スライド等からの参照用）。
 
 ## 置き場所と公開 URL（gallery/README.md の規約に従う）
 

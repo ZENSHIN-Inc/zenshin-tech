@@ -5,9 +5,10 @@
  *    - HTML はデッキごとに変換し、frontmatter の title / description から OGP メタを注入する
  *    - OGP 画像（1200x630、zenshin-hp の技術ブログと同意匠）もデッキごとに生成する
  * 2. assets/（ブランド素材）と gallery/ 配下の画像を public/ へコピー
- * 3. デッキ / ギャラリーのメタ情報を src/data/*.json へ出力
- *    - slides.json は content.config.ts の slides コレクション（file ローダー）が読む
- *    - gallery.json はギャラリーページが直接 import する
+ *    - gallery/ はスライド挿絵などの画像素材置き場。/gallery/<フォルダ>/<ファイル> で配信は
+ *      されるが、公開一覧ページは持たない（2026-07 にギャラリーページを廃止）
+ * 3. デッキのメタ情報を src/data/slides.json へ出力
+ *    - content.config.ts の slides コレクション（file ローダー）が読む
  *
  * 一覧ページ・フィード（/index.json）・RSS は Astro 側（src/pages/）が生成する。
  * public/slides・public/assets・public/gallery・src/data は生成物（gitignore 済み）。
@@ -60,6 +61,17 @@ interface Deck {
   title: string;
   description: string;
   date: string;
+  tags: string[];
+}
+
+/** `tags: [A, B]` のようなインライン配列表記をパースする（それ以外は空配列） */
+function parseTags(value: string | undefined): string[] {
+  if (!value || !value.startsWith("[") || !value.endsWith("]")) return [];
+  return value
+    .slice(1, -1)
+    .split(",")
+    .map((t) => t.trim().replace(/^['"]|['"]$/g, ""))
+    .filter((t) => t.length > 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -115,6 +127,7 @@ const decks: Deck[] = slideFiles.map((file) => {
     title: fm["title"] ?? heading?.[1] ?? base,
     description: fm["description"] ?? "",
     date: dateMatch ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}` : "",
+    tags: parseTags(fm["tags"]),
   };
 });
 
@@ -135,6 +148,7 @@ if (decks.length > 0) {
       label: "スライド | 株式会社ZENSHIN",
       title: deck.title,
       author,
+      date: deck.date ? deck.date.replaceAll("-", ".") : undefined,
     });
     fs.writeFileSync(path.join(PUBLIC, "slides", `${deck.base}-og.png`), png);
   }
@@ -209,6 +223,7 @@ const slidesData = decks.map((d) => ({
   title: d.title,
   description: d.description,
   date: d.date,
+  tags: d.tags,
   author: AUTHOR_ID,
   urls: {
     page: `/slides/${d.base}.html`,
@@ -218,7 +233,6 @@ const slidesData = decks.map((d) => ({
   },
 }));
 fs.writeFileSync(path.join(DATA_DIR, "slides.json"), `${JSON.stringify(slidesData, null, 2)}\n`);
-fs.writeFileSync(path.join(DATA_DIR, "gallery.json"), `${JSON.stringify(galleryGroups, null, 2)}\n`);
 
 console.log(`Done: ${decks.length} deck(s), ${galleryGroups.length} gallery group(s) -> public/ + src/data/`);
 

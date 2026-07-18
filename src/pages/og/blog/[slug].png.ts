@@ -24,11 +24,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const GET: APIRoute<Props> = async ({ props }) => {
   const author = await resolveAuthor(props.post.data.author.id);
+  const d = props.post.data.date;
+  const date = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
 
   const png = await renderOgImage({
     label: "技術ブログ | 株式会社ZENSHIN",
     title: props.post.data.title,
     author,
+    date,
   });
 
   return new Response(new Uint8Array(png), {

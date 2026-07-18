@@ -50,6 +50,8 @@ const slides = defineCollection({
     title: z.string(),
     description: z.string(),
     date: z.coerce.date(),
+    // タグはブログと共通の概念（サイドバー・/tags/ ページで合算集計する）
+    tags: z.array(z.string()).default([]),
     author: reference("authors"),
     // すべてサイトルート相対パス（/slides/...）。フィードや OGP では絶対 URL 化して使う
     urls: z.object({

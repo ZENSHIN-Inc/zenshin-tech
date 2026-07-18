@@ -2,7 +2,7 @@
 
 ## プロジェクト概要
 
-株式会社ZENSHINの技術メディア **ZENSHIN Tech**（技術ブログ + Marp スライド + ギャラリー）。
+株式会社ZENSHINの技術メディア **ZENSHIN Tech**（技術ブログ + Marp スライド）。
 Astro 7 + Tailwind 4 の静的サイト（Cloudflare Pages）で、main に push すると GitHub Actions が自動でビルド・デプロイする（**push = 社外公開**）。
 
 - 公開 URL: https://tech.zenshin-inc.co.jp/
@@ -13,12 +13,12 @@ Astro 7 + Tailwind 4 の静的サイト（Cloudflare Pages）で、main に push
 
 - `src/content/blog/` — ブログ記事（`YYYY-MM-DD-<slug>.md`）。frontmatter は `src/content.config.ts` の Zod スキーマ（title 40 文字・tags 1〜6・author 必須）。`published: false` でドラフト（dev のみ表示）
 - `src/content/authors/` — 著者情報（アバター画像は `src/assets/images/authors/`）
-- `src/pages/` — トップ（ブログ + スライド混在一覧）・`/blog/`・`/slides/`・`/gallery/`・OGP 画像エンドポイント・`/index.json`（zenshin-hp 向けフィード）・`/rss.xml`
+- `src/pages/` — トップ（ブログ + スライド混在一覧）・`/blog/`・`/slides/`・`/tags/`・`/archive/`（タグ・月別アーカイブはブログ + スライド共通）・OGP 画像エンドポイント・`/index.json`（zenshin-hp 向けフィード）・`/rss.xml`
 - `src/lib/og-image.ts` — OGP 画像レンダラー（satori + sharp、1200x630）。ブログ・スライド共用。意匠は zenshin-hp の `src/lib/og-image.ts` 由来
 - `src/plugins/satteri-link-card.ts` — 記事中の URL 単独段落をリンクカード化（zenshin-hp から移植）。画像キャッシュは `public/link-cards/`（コミットする）
 - `slides/` — Marp スライド原稿（`<YYYY-MM-DD>-<slug>.md`）。HTML / PDF / サムネイル / OGP 画像に変換される
-- `gallery/` — CG・生成画像などの公開素材（`<YYYYMM>-<slug>/` で分ける。規約は `gallery/README.md`）
-- `assets/` — ロゴなどのブランド素材と、スライド用の引用図版（スクショ・チャートは `assets/slides/<デッキ slug>/` に置く）。スライドからは `../assets/...` で参照。**第三者の図版を `gallery/` に置かない**（gallery はギャラリー一覧に自動掲載される ZENSHIN 制作画像専用）
+- `gallery/` — スライド挿絵など生成画像の素材置き場（`<YYYYMM>-<slug>/` で分ける。規約は `gallery/README.md`）。`/gallery/<フォルダ>/<ファイル>` で配信されるが**公開一覧ページはない**（2026-07 に廃止）
+- `assets/` — ロゴなどのブランド素材と、スライド用の引用図版（スクショ・チャートは `assets/slides/<デッキ slug>/` に置く）。スライドからは `../assets/...` で参照。**第三者の図版を `gallery/` に置かない**（gallery は ZENSHIN 制作画像専用）
 - `themes/zenshin.css` — Marp 用ブランドテーマ
 - `scripts/build-slides.ts` — Marp prebuild（public/slides・public/assets・public/gallery・src/data を生成。すべて git 管理外）
 - `docs/agent-instructions/skills/` — Claude Code / Codex 共通スキルの**正本**（`SKILL.md.liquid` + `common/` 素材）

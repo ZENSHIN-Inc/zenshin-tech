@@ -48,6 +48,8 @@ export interface OgOptions {
   title: string;
   /** 左下に表示する著者情報（サイト全体 OGP など不要な場合は省略） */
   author?: OgAuthor;
+  /** 右上に表示する制作日（例: "2026.04.17"）。省略時は非表示 */
+  date?: string;
 }
 
 interface OgContext {
@@ -78,7 +80,7 @@ async function toPngDataUri(absolutePath: string, size: number): Promise<string>
   return `data:image/png;base64,${buffer.toString("base64")}`;
 }
 
-export async function renderOgImage({ label, title, author }: OgOptions): Promise<Buffer> {
+export async function renderOgImage({ label, title, author, date }: OgOptions): Promise<Buffer> {
   contextPromise ??= loadContext();
   const { fonts, logoDataUri } = await contextPromise;
   // OGP 表示サイズは 88px。Retina 2x + sharp の SVG パース上限の余裕をみて 200px でクロップ
@@ -172,12 +174,37 @@ export async function renderOgImage({ label, title, author }: OgOptions): Promis
                 padding: "56px 64px 60px 64px",
               },
               children: [
-                // 上段: ラベル
+                // 上段: 左にラベル、右に制作日（date 未指定なら非表示）
                 {
                   type: "div",
                   props: {
-                    style: { color: COLOR.gold, fontSize: "38px", fontWeight: 700, letterSpacing: "0.08em" },
-                    children: label,
+                    style: { display: "flex", alignItems: "center", justifyContent: "space-between" },
+                    children: [
+                      {
+                        type: "div",
+                        props: {
+                          style: { color: COLOR.gold, fontSize: "38px", fontWeight: 700, letterSpacing: "0.08em" },
+                          children: label,
+                        },
+                      },
+                      ...(date
+                        ? [
+                            {
+                              type: "div",
+                              props: {
+                                style: {
+                                  color: COLOR.muted,
+                                  fontSize: "30px",
+                                  fontWeight: 400,
+                                  letterSpacing: "0.06em",
+                                  fontVariantNumeric: "tabular-nums",
+                                },
+                                children: date,
+                              },
+                            },
+                          ]
+                        : []),
+                    ],
                   },
                 },
                 // 中段: タイトル（下段ブロックが視覚的に重いため marginBottom で少し上寄せる）

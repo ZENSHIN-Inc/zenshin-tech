@@ -1,0 +1,88 @@
+---
+/**
+ * 月別アーカイブページ（ブログ記事 + スライド共通）
+ *
+ * `/archive/[YYYY-MM]/` の URL で、その月に公開されたコンテンツを一覧表示する。
+ * ビルド時に `getStaticPaths` で全月分の静的ページを生成する。
+ */
+import PageLayout from "@/layouts/PageLayout.astro";
+import ArticleCard from "@/components/ArticleCard.astro";
+import BlogSidebar from "@/components/BlogSidebar.astro";
+import { ROUTES } from "@/consts/routes";
+import { loadContentItems, toYearMonth } from "@/lib/content-items";
+
+export async function getStaticPaths() {
+  const allItems = await loadContentItems();
+  const bucket = new Map<string, typeof allItems>();
+  for (const item of allItems) {
+    const ym = toYearMonth(item.date);
+    const arr = bucket.get(ym) ?? [];
+    arr.push(item);
+    bucket.set(ym, arr);
+  }
+  return [...bucket.entries()].map(([yearMonth, items]) => ({
+    params: { yearMonth },
+    props: { yearMonth, items },
+  }));
+}
+
+const { yearMonth, items } = Astro.props;
+const [year, month] = yearMonth.split("-");
+const label = `${year}年${Number(month)}月`;
+---
+
+<PageLayout
+  title={`${label}のコンテンツ | ZENSHIN Tech`}
+  description={`${label}に公開された記事・スライドの一覧。株式会社ZENSHINの技術メディア ZENSHIN Tech。`}
+  pageTitle={label}
+  headerMaxWidth="max-w-6xl"
+  breadcrumbs={[
+    { name: "ホーム", path: ROUTES.home },
+    { name: label, path: ROUTES.archive(yearMonth) },
+  ]}
+>
+  {/* ヘッダー帯の h1 直下に件数を小さく表示 */}
+  <p slot="pageMeta" class="mt-3 text-sm text-on-surface-dark/75">
+    <span class="font-bold tabular-nums text-on-surface-dark">{items.length}</span> 件のコンテンツ
+  </p>
+
+  <section class="bg-surface section-padding">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <div
+        class="lg:grid lg:grid-cols-[minmax(0,1fr)_240px] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_260px]"
+      >
+        <div class="min-w-0">
+          {
+            items.length > 0 ? (
+              <ul class="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2">
+                {items.map((item, i) => (
+                  <ArticleCard
+                    href={item.href}
+                    ogImageSrc={item.ogImageSrc}
+                    title={item.title}
+                    tags={item.tags}
+                    date={item.date}
+                    contentType={item.contentType}
+                    external={item.external}
+                    pdfHref={item.pdfHref}
+                    linkable
+                    delay={String(Math.min(i + 1, 5))}
+                    isDraft={item.isDraft}
+                  />
+                ))}
+              </ul>
+            ) : (
+              <div class="text-center">
+                <p class="text-lg text-muted">該当するコンテンツがありません。</p>
+              </div>
+            )
+          }
+        </div>
+
+        <aside class="mt-12 lg:mt-0" aria-label="コンテンツナビゲーション">
+          <BlogSidebar currentYearMonth={yearMonth} class="lg:sticky lg:top-24" />
+        </aside>
+      </div>
+    </div>
+  </section>
+</PageLayout>

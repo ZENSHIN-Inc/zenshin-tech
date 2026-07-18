@@ -137,7 +137,7 @@ function formatDate(date: Date): string {
           tags.map((tag) =>
             linkable ? (
               <a
-                href={ROUTES.blogTag(tag)}
+                href={ROUTES.tag(tag)}
                 class="article-card-subnav-link inline-flex shrink-0 items-center gap-0.5 rounded-sm bg-label/10 px-2 py-0.5 text-xs font-bold text-label transition-[background-color,transform,opacity] hover:bg-label/20 active:scale-95 active:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 <Icon name="heroicons:hashtag-20-solid" class="h-3 w-3 opacity-70" />

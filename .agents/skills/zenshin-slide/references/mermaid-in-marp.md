@@ -20,7 +20,7 @@ assets/slides/<デッキslug>/
 └── diagram.svg
 ```
 
-`gallery/`はZENSHIN制作画像の公開ギャラリー用なので、スライド内の図は置かない。
+`gallery/`は生成画像（挿絵など）の素材置き場なので、Mermaidの図は置かない。
 
 ## SVGを生成する
 

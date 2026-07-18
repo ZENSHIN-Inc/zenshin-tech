@@ -1,25 +1,17 @@
 ---
 /**
- * ブログサイドバー
+ * サイドバー（タグ・月別アーカイブ）
  *
- * 構成:
+ * タグ・月はブログ記事とスライドを合算して集計する（サイト共通のタクソノミー）。
  *   タグ  — 件数降順、同数なら日本語ロケールでソート
  *   月別アーカイブ — 新しい月順
  *
- * 一覧ページ（/blog/, /blog/tags/[tag]/, /blog/archive/[YYYY-MM]/）では
- * 右サイドに sticky で配置し、ブログ詳細（/blog/[slug]/）では
- * 目次（TOC）の下に並べて 1 つの sticky コンテナに収める。
- *
- * ブログ詳細では TOC と同じ「.blog-card」スタイル（白カード + 柔らかいシャドウ）に揃え、
- * 一覧ページとの視覚的統一感を保つ。
- *
- * データは Props で受け取らず、コンポーネント内で getCollection("blog") を呼ぶ。
+ * データは Props で受け取らず、コンポーネント内で loadContentItems() を呼ぶ。
  * Astro のコンテンツコレクションはビルド時に 1 回ロードされるためオーバーヘッドは無視できる。
  */
-import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import { ROUTES } from "@/consts/routes";
-import { filterPublished } from "@/lib/drafts";
+import { loadContentItems, toYearMonth } from "@/lib/content-items";
 
 interface Props {
   /** 現在開いているタグ（ハイライト用）。タグ別一覧ページで指定 */
@@ -36,12 +28,12 @@ const {
   class: className = "",
 } = Astro.props;
 
-const allPosts = filterPublished(await getCollection("blog"));
+const items = await loadContentItems();
 
 // タグ集計（件数降順、同数なら日本語ロケール順）
 const tagCounts = new Map<string, number>();
-for (const post of allPosts) {
-  for (const tag of post.data.tags) {
+for (const item of items) {
+  for (const tag of item.tags) {
     tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
   }
 }
@@ -53,9 +45,8 @@ const tags = [...tagCounts.entries()]
 
 // 月別集計（新しい月順）
 const monthCounts = new Map<string, number>();
-for (const post of allPosts) {
-  const d = post.data.date;
-  const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+for (const item of items) {
+  const ym = toYearMonth(item.date);
   monthCounts.set(ym, (monthCounts.get(ym) ?? 0) + 1);
 }
 const months = [...monthCounts.entries()]
@@ -81,7 +72,7 @@ const months = [...monthCounts.entries()]
           return (
             <li>
               <a
-                href={ROUTES.blogTag(tag)}
+                href={ROUTES.tag(tag)}
                 aria-current={isActive ? "page" : undefined}
                 class:list={[
                   "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-bold transition-[background-color,transform,opacity] active:scale-95 active:opacity-80",
@@ -114,7 +105,7 @@ const months = [...monthCounts.entries()]
           return (
             <li>
               <a
-                href={ROUTES.blogArchive(yearMonth)}
+                href={ROUTES.archive(yearMonth)}
                 aria-current={isActive ? "page" : undefined}
                 class:list={[
                   "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-bold transition-[background-color,transform,opacity] active:scale-95 active:opacity-80",
@@ -133,7 +124,7 @@ const months = [...monthCounts.entries()]
         })}
       </ul>
     ) : (
-      <p class="text-sm text-muted-light">記事はまだありません。</p>
+      <p class="text-sm text-muted-light">コンテンツはまだありません。</p>
     )}
   </nav>
 </div>

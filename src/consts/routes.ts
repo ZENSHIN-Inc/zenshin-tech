@@ -8,7 +8,6 @@ export const ROUTES = {
   home: "/",
   blog: "/blog/",
   slides: "/slides/",
-  gallery: "/gallery/",
   rss: "/rss.xml",
 
   // 外部（コーポレートサイト）
@@ -17,8 +16,9 @@ export const ROUTES = {
 
   // 動的ルート
   blogPost: (slug: string) => `/blog/${slug}/` as const,
-  blogTag: (tag: string) => `/blog/tags/${encodeURIComponent(tag)}/` as const,
-  blogArchive: (yearMonth: string) => `/blog/archive/${yearMonth}/` as const,
+  // タグ・月別アーカイブはブログ + スライド共通
+  tag: (tag: string) => `/tags/${encodeURIComponent(tag)}/` as const,
+  archive: (yearMonth: string) => `/archive/${yearMonth}/` as const,
 
   // OGP 画像 (1200x630 PNG)
   ogImageBlog: (slug: string) => `/og/blog/${slug}.png` as const,

@@ -26,11 +26,13 @@ const slides = (await getCollection("slides")).sort(
             {slides.map((slide, i) => (
               <ArticleCard
                 href={slide.data.urls.page}
-                ogImageSrc={slide.data.urls.thumbnail}
+                ogImageSrc={slide.data.urls.ogImage}
                 title={slide.data.title}
+                tags={slide.data.tags}
                 date={slide.data.date}
                 external
                 pdfHref={slide.data.urls.pdf}
+                linkable
                 delay={String(Math.min(i + 1, 5))}
               />
             ))}

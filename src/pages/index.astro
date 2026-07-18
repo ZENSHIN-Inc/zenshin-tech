@@ -9,53 +9,9 @@ import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
 import ArticleCard from "@/components/ArticleCard.astro";
 import BlogSidebar from "@/components/BlogSidebar.astro";
-import { getCollection } from "astro:content";
-import { ROUTES } from "@/consts/routes";
-import { filterPublished } from "@/lib/drafts";
+import { loadContentItems } from "@/lib/content-items";
 
-const posts = filterPublished(await getCollection("blog"));
-const slides = await getCollection("slides");
-
-/** blog / slides をカード表示用に正規化した 1 件分 */
-interface ContentItem {
-  contentType: "article" | "slide";
-  href: string;
-  ogImageSrc: string;
-  title: string;
-  tags: string[];
-  date: Date;
-  external: boolean;
-  pdfHref?: string;
-  isDraft?: boolean;
-}
-
-const articleItems: ContentItem[] = posts.map((post) => ({
-  contentType: "article",
-  href: ROUTES.blogPost(post.data.slug),
-  ogImageSrc: ROUTES.ogImageBlog(post.data.slug),
-  title: post.data.title,
-  tags: post.data.tags,
-  date: post.data.date,
-  external: false,
-  isDraft: !post.data.published,
-}));
-
-// スライドのサムネは 1 ページ目 PNG（16:9）。カードの 1200/630 枠に object-cover で収める。
-// スライド HTML は単体表示（サイトのヘッダーなし）なので新しいタブで開く
-const slideItems: ContentItem[] = slides.map((slide) => ({
-  contentType: "slide",
-  href: slide.data.urls.page,
-  ogImageSrc: slide.data.urls.thumbnail,
-  title: slide.data.title,
-  tags: [],
-  date: slide.data.date,
-  external: true,
-  pdfHref: slide.data.urls.pdf,
-}));
-
-const allItems = [...articleItems, ...slideItems].sort(
-  (a, b) => b.date.getTime() - a.date.getTime()
-);
+const allItems = await loadContentItems();
 ---
 
 <BaseLayout

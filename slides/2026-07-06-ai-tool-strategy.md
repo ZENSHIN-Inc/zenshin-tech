@@ -5,6 +5,7 @@ size: 16:9
 lang: ja
 paginate: true
 title: 生成 AI ツール戦略 — Codex と GPT-5.6 系を選ぶ理由
+tags: [AI, 技術選定]
 description: モデルの勢力図（トップ 2 社 + 厚い追走ティア）から、なぜ現時点では GPT-5.6 系と Codex を主力にするのか、Claude との比較、コスパ・タイパ、課金戦略までを整理します。
 footer: © ZENSHIN Inc.
 ---
