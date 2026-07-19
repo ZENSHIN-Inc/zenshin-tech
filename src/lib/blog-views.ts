@@ -1,9 +1,12 @@
 /**
- * ブログ閲覧数カウンターのクライアント側ロジック（zenshin-hp から移植）。
+ * 閲覧数カウンターのクライアント側ロジック（zenshin-hp から移植）。
+ * ブログ記事とスライドの両方で使う（slug はブログ slug またはデッキ slug）。
  *
  * .astro の <script> からはこのモジュールの関数を呼ぶだけにして、ロジックは
  * すべて型付き .ts に集約する（tsconfig の include 対象なので astro check で
  * 型検査される）。サーバ側は functions/api/views/[slug].ts。
+ * スライドの HTML 単体ページ側は scripts/build-slides.ts が同等の計測
+ * スクリプトをビルド時に注入する（Marp HTML はバンドラを通らないため）。
  */
 import { ROUTES } from "@/consts/routes";
 
@@ -26,7 +29,7 @@ async function fetchViewCount(
   method: "GET" | "POST"
 ): Promise<number | null> {
   try {
-    const res = await fetch(ROUTES.apiBlogViews(slug), { method });
+    const res = await fetch(ROUTES.apiViews(slug), { method });
     if (!res.ok) return null;
     const data: unknown = await res.json();
     return isViewCountResponse(data) ? data.count : null;

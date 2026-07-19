@@ -1,8 +1,12 @@
 /**
- * ブログ閲覧数カウンター API（Cloudflare Pages Functions）
+ * 閲覧数カウンター API（Cloudflare Pages Functions）
  *
  *   GET  /api/views/:slug  → 現在の閲覧数を返す（インクリメントしない）
- *   POST /api/views/:slug  → 閲覧数を +1 して返す（記事を開いたとき）
+ *   POST /api/views/:slug  → 閲覧数を +1 して返す（記事・スライドを開いたとき）
+ *
+ * slug はブログ記事の slug（例: first-blog-post）またはスライドのデッキ slug
+ * （例: 2026-07-06-ai-tool-strategy）。デッキ slug は日付プレフィックス付きで
+ * ブログ slug と衝突しないため、KV のキー空間（views:*）は共用する。
  *
  * zenshin-hp から技術ブログ移設（zenshin-hp#251）に伴い移植。
  * 保存先は Workers KV（binding `BLOG_VIEWS`、wrangler.toml）。namespace は
@@ -24,8 +28,8 @@ const jsonHeaders = {
   "Cache-Control": "no-store",
 };
 
-// KV キーへ任意文字列が書かれるのを防ぐ。ブログ slug は
-// 例: first-blog-post（英小文字・数字・ハイフンのみ）
+// KV キーへ任意文字列が書かれるのを防ぐ。ブログ slug（first-blog-post）も
+// デッキ slug（2026-07-06-ai-tool-strategy）も英小文字・数字・ハイフンのみ
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{0,80}$/;
 
 function keyFor(slug: string): string {

@@ -19,7 +19,7 @@ export interface ContentItem {
   external: boolean;
   pdfHref?: string;
   isDraft?: boolean;
-  /** ブログ記事の slug（閲覧数カウンター用。スライドは持たない） */
+  /** 閲覧数カウンター用の slug（記事 = ブログ slug、スライド = デッキ slug） */
   slug?: string;
 }
 
@@ -52,6 +52,8 @@ export async function loadContentItems(): Promise<ContentItem[]> {
     date: slide.data.date,
     external: false,
     pdfHref: slide.data.urls.pdf,
+    // デッキ slug（YYYY-MM-DD-<slug>）をそのまま閲覧数カウンターのキーにする
+    slug: slide.id,
   }));
 
   return [...articleItems, ...slideItems].sort((a, b) => b.date.getTime() - a.date.getTime());

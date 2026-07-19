@@ -11,6 +11,7 @@ import BlogSidebar from "@/components/BlogSidebar.astro";
 import AuthorCard from "@/components/AuthorCard.astro";
 import ShareMenu from "@/components/ShareMenu.astro";
 import RelatedPosts from "@/components/RelatedPosts.astro";
+import RelatedSlides from "@/components/RelatedSlides.astro";
 import Breadcrumbs from "@/components/Breadcrumbs.astro";
 import { Icon } from "astro-icon/components";
 import { getCollection, getEntry, render } from "astro:content";
@@ -182,12 +183,13 @@ const articleJsonLd = JSON.stringify({
             </div>
           </div>
 
-          {/* 関連記事（同タグの最新記事） */}
+          {/* 関連記事（同タグの最新記事）+ 関連スライド（同タグ優先・新しい順で補完） */}
           <RelatedPosts
             currentSlug={post.data.slug}
             tags={post.data.tags}
             class="mt-10"
           />
+          <RelatedSlides tags={post.data.tags} class="mt-10" />
 
           {/* タグ + 月別アーカイブ（縦積み。コンテンツ量で自然に伸びる） */}
           <BlogSidebar class="mt-10" />

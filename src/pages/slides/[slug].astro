@@ -1,0 +1,487 @@
+---
+/**
+ * スライドビューワーページ（SpeakerDeck 風）
+ *
+ * Marp が生成した素のデッキ HTML（/slides/<id>.html）を same-origin の iframe で
+ * 「額縁」ページに埋め込む。デッキ側にはビルド時（scripts/build-slides.ts）に
+ * 連携スクリプトが注入されており、postMessage で次をやり取りする:
+ *   - deck-state: 現在ページ / 総ページ → 下部バーの「N / N」と進捗バーを更新
+ *   - deck-finished: 最終ページでもう一度「次へ」→ 関連コンテンツのエンドカードを表示
+ *   - deck-nav / deck-goto: 親側の前後ボタン・「最初から見る」でデッキを操作
+ * 閲覧数はこのページが記事と同じ仕組み（trackArticleView）で計測する。
+ */
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Breadcrumbs from "@/components/Breadcrumbs.astro";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd.astro";
+import ShareMenu from "@/components/ShareMenu.astro";
+import RelatedPosts from "@/components/RelatedPosts.astro";
+import RelatedSlides from "@/components/RelatedSlides.astro";
+import { Icon } from "astro-icon/components";
+import { getCollection } from "astro:content";
+import { ROUTES } from "@/consts/routes";
+import { filterPublished } from "@/lib/drafts";
+
+export async function getStaticPaths() {
+  const slides = await getCollection("slides");
+  return slides.map((slide) => ({
+    params: { slug: slide.id },
+    props: { slide },
+  }));
+}
+
+const { slide } = Astro.props;
+const siteUrl = Astro.site?.toString().replace(/\/$/, "") || "";
+const pageUrl = `${siteUrl}${ROUTES.slideView(slide.id)}`;
+
+/** 日付を YYYY.MM.DD 形式にフォーマット */
+function formatDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}.${m}.${d}`;
+}
+
+// エンドカード（最終ページの先）に出す関連コンテンツ。
+// スライド・記事を混ぜてタグ一致数が多い順 → 新しい順。一致 0 件も後ろに並ぶので
+// 件数が足りなければ新着で自然に埋まる（見終わった直後の回遊導線として常に出す）
+interface EndCardItem {
+  type: "article" | "slide";
+  title: string;
+  url: string;
+  thumb: string;
+  date: Date;
+  tags: string[];
+}
+
+const allSlides = await getCollection("slides");
+const posts = filterPublished(await getCollection("blog"));
+const candidates: EndCardItem[] = [
+  ...allSlides
+    .filter((s) => s.id !== slide.id)
+    .map<EndCardItem>((s) => ({
+      type: "slide",
+      title: s.data.title,
+      url: ROUTES.slideView(s.id),
+      thumb: s.data.urls.ogImage,
+      date: s.data.date,
+      tags: s.data.tags,
+    })),
+  ...posts.map<EndCardItem>((p) => ({
+    type: "article",
+    // OGP 用に改行したタイトルは 1 行へ戻す
+    title: p.data.title.replace(/\n/g, " "),
+    url: ROUTES.blogPost(p.data.slug),
+    thumb: ROUTES.ogImageBlog(p.data.slug),
+    date: p.data.date,
+    tags: p.data.tags,
+  })),
+];
+const endCardItems = candidates
+  .map((c) => ({ c, score: c.tags.filter((t) => slide.data.tags.includes(t)).length }))
+  .sort((a, b) => b.score - a.score || b.c.date.getTime() - a.c.date.getTime())
+  .slice(0, 3)
+  .map((x) => x.c);
+
+const TYPE_LABEL = { article: "記事", slide: "スライド" } as const;
+---
+
+<BaseLayout
+  title={`${slide.data.title} | ZENSHIN 技術ブログ`}
+  description={slide.data.description}
+  ogType="article"
+  ogImage={slide.data.urls.ogImage}
+>
+  <BreadcrumbJsonLd items={[
+    { name: "トップ", path: ROUTES.home },
+    { name: slide.data.title, path: ROUTES.slideView(slide.id) },
+  ]} />
+  <Header />
+
+  {/* ダークな鑑賞エリア — スライドが「くり抜かれて」浮かぶ SpeakerDeck 風の額縁 */}
+  <main id="main-content" class="flex-1">
+    <section class="bg-surface-dark pt-28 pb-14" data-pagefind-body>
+      <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        {/* パンくず + 一覧へ戻る（上部にも常設。下部の戻るリンクと同じ遷移先） */}
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          <Breadcrumbs
+            items={[
+              { name: "トップ", path: ROUTES.home },
+              { name: slide.data.title },
+            ]}
+          />
+          <a
+            href={ROUTES.home}
+            class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-on-surface-dark/75 transition-colors hover:text-[#d8c49a]"
+          >
+            <Icon name="heroicons:arrow-left-20-solid" class="h-4 w-4" aria-hidden="true" />
+            コンテンツ一覧に戻る
+          </a>
+        </div>
+        {/* 投稿者情報は出さず、日付・閲覧数は下部バーへ寄せて高さを取らない */}
+        <h1 class="text-2xl font-bold leading-snug text-on-surface-dark md:text-3xl">
+          {slide.data.title}
+        </h1>
+
+        {/* プレイヤー — iframe の上にエンドカードを重ねる。
+            拡大は OS の全画面を奪わず、ブラウザウィンドウ内で最大化する
+            シアターモード（.deck-theater を付けて fixed 全面化）にする */}
+        <div id="deck-stage" class="relative mt-6 overflow-hidden rounded-xl bg-black ring-1 ring-white/10">
+          {/* シアターモード中だけ右上に出す「縮小して戻る」ボタン */}
+          <button
+            type="button"
+            id="deck-theater-exit"
+            class="deck-theater-exit absolute right-3 top-3 z-20 hidden items-center gap-1.5 rounded-full border border-white/30 bg-black/60 px-3.5 py-2 text-sm font-bold text-white backdrop-blur transition-all hover:border-[#c4a97d] hover:text-[#d8c49a] active:scale-95"
+          >
+            <Icon name="heroicons:arrows-pointing-in-20-solid" class="h-4.5 w-4.5" aria-hidden="true" />
+            縮小して戻る
+          </button>
+          <iframe
+            id="deck-frame"
+            src={ROUTES.slideEmbed(slide.id)}
+            title={`スライド: ${slide.data.title}`}
+            class="block aspect-video w-full"
+            allow="fullscreen"
+            allowfullscreen
+          ></iframe>
+
+          {/* エンドカード — 最終ページでもう一度「次へ」を押すと表示される */}
+          <div
+            id="deck-endcard"
+            hidden
+            class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-5 overflow-y-auto bg-surface-dark/95 p-6"
+            role="dialog"
+            aria-label="関連コンテンツ"
+          >
+            <p class="font-display text-sm font-bold tracking-[0.18em] text-[#d8c49a]">続けて見る</p>
+            <ul class="grid w-full max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
+              {endCardItems.map((item) => (
+                <li>
+                  <a href={item.url} class="group block">
+                    <img
+                      src={item.thumb}
+                      alt=""
+                      width="1200"
+                      height="630"
+                      loading="lazy"
+                      decoding="async"
+                      class="aspect-1200/630 w-full rounded-lg object-cover ring-1 ring-white/15 transition-transform duration-150 group-hover:scale-[1.02]"
+                    />
+                    <span class="mt-2 flex items-start gap-1.5">
+                      <span class="mt-0.5 inline-flex shrink-0 items-center rounded-sm border border-white/25 px-1.5 py-px text-[10px] font-bold text-on-surface-dark/80">
+                        {TYPE_LABEL[item.type]}
+                      </span>
+                      <span class="line-clamp-2 text-xs font-bold leading-snug text-on-surface-dark group-hover:text-[#d8c49a]">
+                        {item.title}
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <div class="flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                id="deck-replay"
+                class="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-[#c4a97d] bg-transparent px-4 py-1.5 text-sm font-bold text-[#d8c49a] transition-all hover:bg-[#c4a97d]/15 active:scale-95"
+              >
+                <Icon name="heroicons:arrow-path-20-solid" class="h-4 w-4" aria-hidden="true" />
+                最初から見る
+              </button>
+              <button
+                type="button"
+                id="deck-endcard-close"
+                class="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-4 py-1.5 text-sm font-bold text-on-surface-dark/85 transition-all hover:border-white/50 hover:text-on-surface-dark active:scale-95"
+              >
+                <Icon name="heroicons:x-mark-20-solid" class="h-4 w-4" aria-hidden="true" />
+                スライドに戻る
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 下部コントロールバー — ページ送り・N / N・進捗バー・全画面・PDF・共有 */}
+        <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div class="flex items-center gap-1.5">
+            <button type="button" id="deck-prev" aria-label="前のページ" class="deck-ctrl">
+              <Icon name="heroicons:chevron-left-20-solid" class="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button type="button" id="deck-next" aria-label="次のページ" class="deck-ctrl">
+              <Icon name="heroicons:chevron-right-20-solid" class="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+          <p class="min-w-14 text-center text-sm font-medium tabular-nums text-on-surface-dark/85" aria-live="off">
+            <span id="deck-page">–</span> / <span id="deck-total">–</span>
+          </p>
+          {/* シークバー — 任意の位置をタップ / ドラッグでそのページへ移動。
+              バー本体は細いままにし、py で上下にタップ領域を確保する */}
+          <div
+            id="deck-seek"
+            class="group/seek min-w-24 flex-1 cursor-pointer touch-none select-none py-2.5"
+            role="slider"
+            tabindex="0"
+            aria-label="ページ移動"
+            aria-valuemin="1"
+            aria-valuemax="1"
+            aria-valuenow="1"
+          >
+            <div class="h-1 overflow-hidden rounded-full bg-white/15 transition-[height] duration-150 group-hover/seek:h-1.5">
+              <div id="deck-progress" class="h-full w-0 rounded-full bg-[#c4a97d] transition-[width] duration-200"></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2.5">
+            {/* 日付 + 閲覧数 — 高さを取らないよう下部バーに小さく置く */}
+            <p class="flex items-center gap-2 text-xs text-on-surface-dark/70">
+              <time datetime={slide.data.date.toISOString()} class="tabular-nums">
+                {formatDate(slide.data.date)}
+              </time>
+              <span
+                class="inline-flex items-center gap-1"
+                data-article-views
+                data-view-slug={slide.id}
+                hidden
+              >
+                <Icon name="heroicons:eye-20-solid" class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+                <span class="sr-only">閲覧数</span>
+                <span class="tabular-nums" data-article-views-value>0</span>
+                <span class="sr-only">回</span>
+              </span>
+            </p>
+            <button
+              type="button"
+              id="deck-theater-open"
+              aria-label="スライドを拡大（ブラウザ内で最大化）"
+              title="スライドを拡大"
+              class="deck-ctrl"
+            >
+              <Icon name="heroicons:arrows-pointing-out-20-solid" class="h-4.5 w-4.5" aria-hidden="true" />
+            </button>
+            {/* hover で白→透過に反転すると悪目立ちするため、白のまま淡いゴールドに寄せる */}
+            <a
+              href={slide.data.urls.pdf}
+              class="inline-flex items-center gap-1 rounded-full border-[1.5px] border-[#c4a97d] bg-white px-3 py-1 text-xs font-bold text-[#8c6f42] transition-[background-color,transform,opacity] hover:bg-[#f5eedd] active:scale-95 active:opacity-80"
+            >
+              <Icon name="heroicons:document-arrow-down-20-solid" class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+              PDF で開く
+            </a>
+            <ShareMenu url={pageUrl} title={slide.data.title} />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* 関連コンテンツ（明るい帯）— 関連スライド + 関連記事 */}
+    <div class="blog-page-bg py-10">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-20">
+        <RelatedSlides tags={slide.data.tags} currentId={slide.id} />
+        <RelatedPosts currentSlug="" tags={slide.data.tags} class="mt-10" />
+        <div class="mt-10">
+          <a href={ROUTES.home} class="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-all active:opacity-70 active:scale-95">
+            <Icon name="heroicons:arrow-left-20-solid" class="h-4 w-4" aria-hidden="true" />
+            コンテンツ一覧に戻る
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<style>
+  /* コントロールボタン（ダーク帯用の丸ボタン） */
+  .deck-ctrl {
+    display: inline-flex;
+    height: 2.25rem;
+    width: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in srgb, white 22%, transparent);
+    color: color-mix(in srgb, var(--color-on-surface-dark) 90%, transparent);
+    transition: border-color 0.15s, color 0.15s, transform 0.15s;
+  }
+  .deck-ctrl:hover {
+    border-color: #c4a97d;
+    color: #d8c49a;
+  }
+  .deck-ctrl:active {
+    transform: scale(0.95);
+  }
+  /* シアターモード — OS の全画面ではなくブラウザウィンドウ内で最大化する。
+     16:9 固定をやめて枠いっぱいに（デッキ側 bespoke がレターボックスする） */
+  #deck-stage.deck-theater {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    margin: 0;
+    border-radius: 0;
+  }
+  #deck-stage.deck-theater iframe {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+  #deck-stage.deck-theater .deck-theater-exit {
+    display: inline-flex;
+  }
+</style>
+
+<script>
+  import { trackArticleView } from "@/lib/blog-views";
+  trackArticleView();
+</script>
+
+<script>
+  // デッキ iframe との postMessage 連携（送受信の相手は build-slides.ts が注入したブリッジ）
+  const frame = document.getElementById("deck-frame") as HTMLIFrameElement | null;
+  const stage = document.getElementById("deck-stage");
+  const endcard = document.getElementById("deck-endcard");
+  const pageEl = document.getElementById("deck-page");
+  const totalEl = document.getElementById("deck-total");
+  const progressEl = document.getElementById("deck-progress");
+  const seekEl = document.getElementById("deck-seek");
+  const replayBtn = document.getElementById("deck-replay");
+
+  let page = 1;
+  let total = 0;
+
+  function post(data: Record<string, unknown>): void {
+    frame?.contentWindow?.postMessage(data, location.origin);
+  }
+
+  function hideEndcard(): void {
+    endcard?.setAttribute("hidden", "");
+  }
+
+  function showEndcard(): void {
+    if (!endcard || !endcard.hasAttribute("hidden")) return;
+    endcard.removeAttribute("hidden");
+    (replayBtn as HTMLButtonElement | null)?.focus();
+  }
+
+  window.addEventListener("message", (e: MessageEvent) => {
+    if (e.origin !== location.origin) return;
+    const data: unknown = e.data;
+    if (typeof data !== "object" || data === null) return;
+    const msg = data as { type?: string; page?: number; total?: number };
+    if (msg.type === "zenshin-deck-escape") {
+      // デッキ内フォーカス時の Escape はブリッジから転送されてくる
+      closeTopLayer();
+      return;
+    }
+    if (msg.type === "zenshin-deck-theater-toggle") {
+      // デッキ内フォーカス時の f キー（ブリッジが OS 全画面から割り当て直したもの）
+      setTheater(!isTheater());
+      return;
+    }
+    if (msg.type === "zenshin-deck-state" && msg.page && msg.total) {
+      page = msg.page;
+      total = msg.total;
+      if (pageEl) pageEl.textContent = String(page);
+      if (totalEl) totalEl.textContent = String(total);
+      if (progressEl) progressEl.style.width = `${(page / total) * 100}%`;
+      if (seekEl) {
+        seekEl.setAttribute("aria-valuemax", String(total));
+        seekEl.setAttribute("aria-valuenow", String(page));
+      }
+      // ページが動いたらエンドカードは閉じる（「最初から見る」後など）
+      if (page < total) hideEndcard();
+    } else if (msg.type === "zenshin-deck-finished") {
+      showEndcard();
+    }
+  });
+
+  document.getElementById("deck-prev")?.addEventListener("click", () => {
+    hideEndcard();
+    post({ type: "zenshin-deck-nav", dir: "prev" });
+  });
+  document.getElementById("deck-next")?.addEventListener("click", () => {
+    // 最終ページで「次へ」→ エンドカード（SpeakerDeck 風）
+    if (total > 0 && page >= total && endcard?.hasAttribute("hidden")) {
+      showEndcard();
+      return;
+    }
+    post({ type: "zenshin-deck-nav", dir: "next" });
+  });
+
+  // シークバー — タップした位置のページへジャンプ、押したままの移動でスクラブ
+  let seeking = false;
+  let lastSeekPage = 0;
+  function seekTo(clientX: number): void {
+    if (!seekEl || total < 1) return;
+    const rect = seekEl.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const ratio = (clientX - rect.left) / rect.width;
+    const target = Math.min(total, Math.max(1, Math.ceil(ratio * total)));
+    if (target === lastSeekPage) return;
+    lastSeekPage = target;
+    post({ type: "zenshin-deck-goto", page: target });
+  }
+  seekEl?.addEventListener("pointerdown", (e) => {
+    seeking = true;
+    lastSeekPage = 0;
+    hideEndcard();
+    seekEl.setPointerCapture(e.pointerId);
+    seekTo(e.clientX);
+  });
+  seekEl?.addEventListener("pointermove", (e) => {
+    if (seeking) seekTo(e.clientX);
+  });
+  const endSeek = () => {
+    seeking = false;
+  };
+  seekEl?.addEventListener("pointerup", endSeek);
+  seekEl?.addEventListener("pointercancel", endSeek);
+
+  replayBtn?.addEventListener("click", () => {
+    hideEndcard();
+    post({ type: "zenshin-deck-goto", page: 1 });
+    frame?.focus();
+  });
+  document.getElementById("deck-endcard-close")?.addEventListener("click", () => {
+    hideEndcard();
+    frame?.focus();
+  });
+
+  // シアターモード（ブラウザ内最大化）。OS の全画面 API は「画面を奪われた」感が
+  // 強いので使わず、fixed 全面化 + 右上の縮小ボタン / Esc でいつでも戻れるようにする
+  function setTheater(on: boolean): void {
+    stage?.classList.toggle("deck-theater", on);
+    document.documentElement.classList.toggle("overflow-hidden", on);
+    frame?.focus();
+  }
+  const isTheater = (): boolean => stage?.classList.contains("deck-theater") ?? false;
+  document.getElementById("deck-theater-open")?.addEventListener("click", () => setTheater(true));
+  document.getElementById("deck-theater-exit")?.addEventListener("click", () => setTheater(false));
+
+  // Escape はエンドカード → シアターの順に一段ずつ閉じる
+  function closeTopLayer(): void {
+    if (!endcard?.hasAttribute("hidden")) hideEndcard();
+    else if (isTheater()) setTheater(false);
+  }
+
+  // 親ページ側にフォーカスがあるときも矢印キーでページ送りできるようにする
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeTopLayer();
+      return;
+    }
+    const target = e.target as HTMLElement | null;
+    if (target && target.closest("input, textarea, select")) return;
+    if ((e.key === "f" || e.key === "F") && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      setTheater(!isTheater());
+      return;
+    }
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    if (e.key === "ArrowLeft") {
+      hideEndcard();
+      post({ type: "zenshin-deck-nav", dir: "prev" });
+    } else if (total > 0 && page >= total) {
+      showEndcard();
+    } else {
+      post({ type: "zenshin-deck-nav", dir: "next" });
+    }
+  });
+
+</script>

@@ -84,6 +84,13 @@
   }
 }
 
+/* Tailwind v4 の preflight は button を cursor: default にするが、
+   本サイトでは押せる要素は常に pointer で「押せること」を示す
+   （共有ボタン・リンクコピー・種別チップ・コードコピーなど全ボタン共通） */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 /* === スクロールアニメーション === */
 [data-animate] {
   opacity: 0;

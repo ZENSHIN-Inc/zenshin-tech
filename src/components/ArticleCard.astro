@@ -47,7 +47,8 @@ interface Props {
   delay?: string;
   /**
    * 渡すと日付の隣に閲覧数（目アイコン + 数値）を表示する。値はブログ記事の
-   * slug。クライアント JS が /api/views/:slug を読んで埋める（スライドは渡さない）。
+   * slug またはスライドのデッキ slug。クライアント JS が /api/views/:slug を
+   * 読んで埋める。
    */
   viewCountSlug?: string;
   /**

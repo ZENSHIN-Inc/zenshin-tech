@@ -14,6 +14,9 @@ export const ROUTES = {
 
   // 動的ルート
   blogPost: (slug: string) => `/blog/${slug}/` as const,
+  // スライドのビューワーページ（SpeakerDeck 風）と、iframe で埋め込む Marp 生成 HTML
+  slideView: (id: string) => `/slides/${id}/` as const,
+  slideEmbed: (id: string) => `/slides/${id}.html` as const,
   // タグ・月別の絞り込みは専用 URL を切らず、トップのクエリパラメータで表現する
   tag: (tag: string) => `/?tag=${encodeURIComponent(tag)}` as const,
   archive: (yearMonth: string) => `/?month=${yearMonth}` as const,
@@ -22,7 +25,8 @@ export const ROUTES = {
   ogImageBlog: (slug: string) => `/og/blog/${slug}.png` as const,
   ogImageSite: "/og/site.png",
 
-  // Pages Functions API エンドポイント（ページではないため sitemap 非対象）
-  apiBlogViews: (slug: string) =>
+  // Pages Functions API エンドポイント（ページではないため sitemap 非対象）。
+  // slug はブログ記事の slug またはスライドのデッキ slug（YYYY-MM-DD-<slug>）
+  apiViews: (slug: string) =>
     `/api/views/${encodeURIComponent(slug)}` as const,
 } as const;

@@ -37,10 +37,11 @@ const xShareUrl = `https://twitter.com/intent/tweet?${params.toString()}`;
 const panelPositionClass =
   menuPosition === "right-start" ? "left-full top-0 ml-2" : "right-0 top-full mt-2";
 
+// group はトリガー hover 時にアイコンへ scale のリアクションを伝えるため
 const triggerClass =
   variant === "button"
-    ? "inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white text-muted transition-all hover:border-primary hover:text-primary active:scale-95 active:opacity-80"
-    : "inline-flex items-center justify-center text-muted-light transition-[color,transform,opacity] hover:text-primary active:scale-95 active:opacity-80";
+    ? "group inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-white text-muted transition-all hover:border-primary hover:text-primary active:scale-95 active:opacity-80"
+    : "group inline-flex items-center justify-center text-muted-light transition-[color,transform,opacity] hover:text-primary active:scale-95 active:opacity-80";
 ---
 
 <div class:list={["relative inline-block", className]} data-share-menu>
@@ -55,8 +56,13 @@ const triggerClass =
       "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
     ]}
   >
-    {/* X の共有アイコンと同じ「四角 + 上矢印」の線画（塗りつぶし無しのアウトライン版） */}
-    <Icon name="heroicons:arrow-up-on-square" class="h-[18px] w-[18px]" aria-hidden="true" />
+    {/* X の共有アイコンと同じ「四角 + 上矢印」の線画（塗りつぶし無しのアウトライン版）。
+        hover 時はアイコン自体も少し拡大して「押せる」リアクションを返す */}
+    <Icon
+      name="heroicons:arrow-up-on-square"
+      class="h-[18px] w-[18px] transition-transform duration-150 group-hover:scale-110"
+      aria-hidden="true"
+    />
   </button>
 
   <div
@@ -75,7 +81,7 @@ const triggerClass =
       target="_blank"
       rel="noopener noreferrer"
       data-share-menu-item
-      class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-alt active:opacity-70"
+      class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-label/10 hover:text-primary active:opacity-70"
     >
       <Icon name="simple-icons:x" class="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden="true" />
       X で共有
@@ -85,7 +91,7 @@ const triggerClass =
       role="menuitem"
       data-share-menu-copy
       data-copy-url={url}
-      class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-surface-alt active:opacity-70"
+      class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-on-surface transition-colors hover:bg-label/10 hover:text-primary active:opacity-70"
     >
       <Icon name="heroicons:link-20-solid" class="h-4 w-4 shrink-0 opacity-80 [[data-copied]_&]:hidden" aria-hidden="true" />
       <Icon name="heroicons:check-20-solid" class="hidden h-4 w-4 shrink-0 text-success [[data-copied]_&]:block" aria-hidden="true" />

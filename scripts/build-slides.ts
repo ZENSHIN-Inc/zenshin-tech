@@ -3,6 +3,9 @@
  *
  * 1. slides/*.md を marp-cli（Node API）で HTML / PDF / サムネイル PNG に変換して public/slides/ へ出力
  *    - HTML はデッキごとに変換し、frontmatter の title / description から OGP メタを注入する
+ *    - HTML にはビューワー連携スクリプトを注入する（src/pages/slides/[slug].astro の
+ *      SpeakerDeck 風ビューワーページが iframe で埋め込む前提。ページ状態の postMessage 通知・
+ *      最終ページ後のエンドカード通知・埋め込み時の OSD 非表示・直接アクセス時の閲覧数カウント）
  *    - OGP 画像（1200x630、zenshin-hp の技術ブログと同意匠）もデッキごとに生成する
  * 2. assets/（ブランド素材）と gallery/ 配下の画像を public/ へコピー
  *    - gallery/ はスライド挿絵などの画像素材置き場。/gallery/<フォルダ>/<ファイル> で配信は
@@ -94,7 +97,7 @@ if (fs.existsSync(ASSETS_DIR)) {
 const slideFiles = fs.existsSync(SLIDES_DIR)
   ? fs
       .readdirSync(SLIDES_DIR)
-      .filter((f) => f.endsWith(".md"))
+      .filter((f) => f.endsWith(".md") && !f.startsWith("."))
       .sort()
       .reverse()
   : [];
@@ -133,7 +136,140 @@ const decks: Deck[] = slideFiles.map((file) => {
 });
 
 // ---------------------------------------------------------------------------
-// 3. Marp ビルド + OGP 画像生成
+// 3. ビューワー連携スクリプト（HTML 版へ注入）
+// ---------------------------------------------------------------------------
+
+/**
+ * Marp HTML へ注入するビューワー連携 + 閲覧数カウンターのスクリプト。
+ * Marp の HTML はバンドラを通らないためインラインで持つ。
+ *
+ * - 直接アクセス時（非埋め込み）: セッション初回のみ POST /api/views/:deck で +1
+ *   （src/lib/blog-views.ts の記事側と同じ水増し抑止。キー接頭辞も合わせる）
+ * - ビューワー（/slides/<deck>/ の iframe）埋め込み時:
+ *   - デッキ内蔵の OSD（ページ送り UI）を隠し、操作はビューワー側のバーに任せる
+ *   - ページ状態（page / total）を postMessage で親へ通知（bespoke の active クラスを監視）
+ *   - 最終ページで「次へ」の入力がもう一度来たら finished を通知（エンドカード表示用）
+ *   - 親からの prev / next / goto メッセージでページを動かす
+ *   - 閲覧数はビューワー側（trackArticleView）が計測するため、ここでは POST しない
+ */
+function viewerBridgeScript(base: string): string {
+  return `<script>/* ZENSHIN ビューワー連携 + 閲覧数カウンター（scripts/build-slides.ts が注入） */
+(function () {
+  var BASE = ${JSON.stringify(base)};
+  var ORIGIN = location.origin;
+  var embedded = window.self !== window.top;
+
+  if (!embedded) {
+    if (!/^https?:$/.test(location.protocol)) return;
+    try {
+      var key = "blog-viewed:" + BASE;
+      if (sessionStorage.getItem(key) === "1") return;
+      fetch("/api/views/" + BASE, { method: "POST" }).then(function (res) {
+        if (res.ok) sessionStorage.setItem(key, "1");
+      }).catch(function () {});
+    } catch (e) {}
+    return;
+  }
+
+  var style = document.createElement("style");
+  style.textContent = ".bespoke-marp-osc{display:none!important}";
+  document.head.appendChild(style);
+
+  var slides = [];
+  function activeIndex() {
+    for (var i = 0; i < slides.length; i++) {
+      if (slides[i].classList.contains("bespoke-marp-active")) return i;
+    }
+    return 0;
+  }
+  var lastSent = 0;
+  function send() {
+    var page = activeIndex() + 1;
+    if (page === lastSent) return;
+    lastSent = page;
+    parent.postMessage({ type: "zenshin-deck-state", page: page, total: slides.length }, ORIGIN);
+  }
+  function isAtEnd() {
+    return slides.length > 0 && activeIndex() === slides.length - 1;
+  }
+  function finish() {
+    parent.postMessage({ type: "zenshin-deck-finished" }, ORIGIN);
+  }
+
+  // 最終ページで「次へ」の入力がもう一度来たらエンドカードを出す（SpeakerDeck 風）。
+  // capture で見るだけで止めない（bespoke 側では最終ページの次送りは no-op）。
+  // ただし Escape / f は bespoke の機能（オーバービュー・OS 全画面）を奪って
+  // ビューワー側の操作（シアターモード解除・切替）に割り当て直す
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      // オーバービュー表示中だけは bespoke に任せて閉じさせる
+      if (document.body.getAttribute("data-bespoke-view") === "overview") return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      parent.postMessage({ type: "zenshin-deck-escape" }, ORIGIN);
+      return;
+    }
+    if ((e.key === "f" || e.key === "F") && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      // OS の全画面（画面を奪う）ではなくブラウザ内シアターモードの切替にする
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      parent.postMessage({ type: "zenshin-deck-theater-toggle" }, ORIGIN);
+      return;
+    }
+    if (!isAtEnd()) return;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)) {
+      finish();
+    }
+  }, true);
+  var touchX = null;
+  document.addEventListener("touchstart", function (e) {
+    touchX = e.changedTouches[0].screenX;
+  }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (touchX === null) return;
+    var dx = e.changedTouches[0].screenX - touchX;
+    touchX = null;
+    if (dx < -40 && isAtEnd()) finish();
+  }, { passive: true });
+
+  // ビューワーからの操作（bespoke のキーボード操作を合成して流用する。
+  // goto は location.hash だと現在ページとの組み合わせで反応しないことがあるため、
+  // 差分ぶんの前後キー送出で確実に移動させる）
+  function dispatchKey(key) {
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: key, bubbles: true }));
+  }
+  window.addEventListener("message", function (e) {
+    if (e.origin !== ORIGIN || !e.data || typeof e.data !== "object") return;
+    if (e.data.type === "zenshin-deck-nav") {
+      dispatchKey(e.data.dir === "prev" ? "ArrowLeft" : "ArrowRight");
+    } else if (e.data.type === "zenshin-deck-goto" && typeof e.data.page === "number") {
+      var target = Math.max(1, Math.min(slides.length, Math.round(e.data.page)));
+      var diff = target - (activeIndex() + 1);
+      var key = diff > 0 ? "ArrowRight" : "ArrowLeft";
+      for (var i = 0; i < Math.abs(diff); i++) dispatchKey(key);
+    }
+  });
+
+  function start() {
+    slides = Array.prototype.slice.call(document.querySelectorAll("svg[data-marpit-svg]"));
+    lastSent = 0;
+    send();
+    var observer = new MutationObserver(send);
+    for (var i = 0; i < slides.length; i++) {
+      observer.observe(slides[i], { attributes: true, attributeFilter: ["class"] });
+    }
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start);
+  } else {
+    start();
+  }
+})();
+</script>`;
+}
+
+// ---------------------------------------------------------------------------
+// 4. Marp ビルド + OGP 画像生成
 // ---------------------------------------------------------------------------
 
 // タイトルの幅検証（OGP で自動改行が発生しない長さかをブログと同じ基準でチェック）と
@@ -168,33 +304,49 @@ if (decks.length > 0) {
     fs.writeFileSync(path.join(PUBLIC, "slides", `${deck.base}-og.png`), png);
   }
 
-  // HTML はデッキごとに変換し、OGP メタ（og:title / og:description / og:image / og:url）を注入する
+  // PDF・サムネイルは元の md から一括変換（marp-cli が並列処理する）。
+  // HTML より先に変換することで、HTML 専用の一時 md（関連コンテンツページ付き）が混ざらない
+  console.log("Building PDF...");
+  await marp(["--input-dir", "slides", "-o", "public/slides", ...MARP_COMMON_ARGS, "--pdf"]);
+  console.log("Building thumbnails...");
+  await marp(["--input-dir", "slides", "-o", "public/slides", ...MARP_COMMON_ARGS, "--image", "png", "--image-scale", "1"]);
+
+  // HTML はデッキごとに変換し、OGP メタ（og:title / og:description / og:image / og:url）を注入する。
+  // 共有・検索の正規 URL はビューワーページ（/slides/<デッキ>/）に寄せ、
+  // 変換後の HTML へ canonical とビューワー連携スクリプトを注入する
   console.log("Building HTML...");
   for (const deck of decks) {
+    const outPath = path.join("public", "slides", `${deck.base}.html`);
+    const viewerUrl = `${SITE_ORIGIN}/slides/${deck.base}/`;
     await marp([
       path.join("slides", `${deck.base}.md`),
       "-o",
-      path.join("public", "slides", `${deck.base}.html`),
+      outPath,
       ...MARP_COMMON_ARGS,
       "--title",
       deck.title,
       ...(deck.description ? ["--description", deck.description] : []),
       "--url",
-      `${SITE_ORIGIN}/slides/${deck.base}.html`,
+      viewerUrl,
       "--og-image",
       `${SITE_ORIGIN}/slides/${deck.base}-og.png`,
     ]);
-  }
 
-  // PDF・サムネイルは OGP が不要なので一括変換（marp-cli が並列処理する）
-  console.log("Building PDF...");
-  await marp(["--input-dir", "slides", "-o", "public/slides", ...MARP_COMMON_ARGS, "--pdf"]);
-  console.log("Building thumbnails...");
-  await marp(["--input-dir", "slides", "-o", "public/slides", ...MARP_COMMON_ARGS, "--image", "png", "--image-scale", "1"]);
+    const html = fs.readFileSync(outPath, "utf8");
+    if (!html.includes("</head>") || !html.includes("</body>")) {
+      throw new Error(`${outPath}: </head> / </body> が見つからずビューワー連携を注入できません`);
+    }
+    fs.writeFileSync(
+      outPath,
+      html
+        .replace("</head>", `<link rel="canonical" href="${viewerUrl}"></head>`)
+        .replace("</body>", `${viewerBridgeScript(deck.base)}</body>`),
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
-// 4. ギャラリーのコピーと画像収集
+// 5. ギャラリーのコピーと画像収集
 // ---------------------------------------------------------------------------
 
 interface GalleryGroup {
@@ -230,7 +382,7 @@ for (const { group, files } of galleryGroups) {
 }
 
 // ---------------------------------------------------------------------------
-// 5. メタ情報を src/data/ へ出力（Astro 側のデータソース）
+// 6. メタ情報を src/data/ へ出力（Astro 側のデータソース）
 // ---------------------------------------------------------------------------
 
 const slidesData = decks.map((d) => ({
@@ -241,7 +393,9 @@ const slidesData = decks.map((d) => ({
   tags: d.tags,
   author: AUTHOR_ID,
   urls: {
-    page: `/slides/${d.base}.html`,
+    // page はビューワーページ（SpeakerDeck 風の額縁 + エンドカード）。
+    // Marp が生成する素の HTML は /slides/<id>.html で、ビューワーが iframe で埋め込む
+    page: `/slides/${d.base}/`,
     pdf: `/slides/${d.base}.pdf`,
     thumbnail: `/slides/${d.base}.png`,
     ogImage: `/slides/${d.base}-og.png`,

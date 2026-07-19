@@ -13,7 +13,7 @@ Astro 7 + Tailwind 4 の静的サイト（Cloudflare Pages）で、main に push
 
 - `src/content/blog/` — ブログ記事（`YYYY-MM-DD-<slug>.md`）。frontmatter は `src/content.config.ts` の Zod スキーマ（title は OGP で改行しない幅 = 全角換算 28 文字/行まで・tags 5〜6 個必須・author 必須）。`published: false` でドラフト（dev のみ表示）
 - `src/content/authors/` — 著者情報（アバター画像は `src/assets/images/authors/`）
-- `src/pages/` — トップ（混在一覧 + 検索。種別・タグ・月別の絞り込みは専用 URL を切らず `/?q&type&tag&month` のクエリパラメータで表現。/blog/ /slides/ の一覧 URL は廃止し public/_redirects でトップへ 301）・記事個別 `/blog/<slug>/`・OGP 画像エンドポイント・`/index.json`（zenshin-hp 向けフィード）・`/rss.xml`
+- `src/pages/` — トップ（混在一覧 + 検索。種別・タグ・月別の絞り込みは専用 URL を切らず `/?q&type&tag&month` のクエリパラメータで表現。/blog/ /slides/ の一覧 URL は廃止し public/_redirects でトップへ 301）・記事個別 `/blog/<slug>/`・スライドビューワー `/slides/<デッキ>/`（SpeakerDeck 風。Marp 生成 HTML `/slides/<デッキ>.html` を iframe 埋め込みし、ページ送りバー・閲覧数・最終ページ後のエンドカードを持つ。正規 URL はビューワー側）・OGP 画像エンドポイント・`/index.json`（zenshin-hp 向けフィード）・`/rss.xml`
 - `src/lib/og-image.ts` — OGP 画像レンダラー（satori + sharp、1200x630）。ブログ・スライド共用。意匠は zenshin-hp の `src/lib/og-image.ts` 由来
 - `src/plugins/satteri-link-card.ts` — 記事中の URL 単独段落をリンクカード化（zenshin-hp から移植）。画像キャッシュは `public/link-cards/`（コミットする）
 - `slides/` — Marp スライド原稿（`<YYYY-MM-DD>-<slug>.md`）。HTML / PDF / サムネイル / OGP 画像に変換される
