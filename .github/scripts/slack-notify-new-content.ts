@@ -67,7 +67,7 @@ function createXPost(item: NewContent): string {
     "",
     item.urls.page,
     "",
-    "#ZENSHIN #技術ブログ",
+    "#ZENSHIN技術ブログ",
   ].join("\n");
 }
 

@@ -1,5 +1,5 @@
 /**
- * Astro 設定ファイル（zenshin-hp の構成をベースに ZENSHIN Tech 用へ調整）
+ * Astro 設定ファイル（zenshin-hp の構成をベースに ZENSHIN 技術ブログ用へ調整）
  *
  * - サイト: https://tech.zenshin-inc.co.jp/（Cloudflare Pages・完全静的）
  * - Markdown は satteri + リンクカードプラグイン（zenshin-hp から移植）
