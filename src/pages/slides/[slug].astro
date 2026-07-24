@@ -390,7 +390,20 @@ const TYPE_LABEL = { article: "記事", slide: "スライド" } as const;
     if (e.origin !== location.origin) return;
     const data: unknown = e.data;
     if (typeof data !== "object" || data === null) return;
-    const msg = data as { type?: string; page?: number; total?: number };
+    const msg = data as {
+      type?: string;
+      page?: number;
+      total?: number;
+      deltaY?: number;
+      deltaMode?: number;
+    };
+    if (msg.type === "zenshin-deck-wheel" && typeof msg.deltaY === "number") {
+      if (!isTheater()) {
+        const multiplier = msg.deltaMode === 1 ? 16 : msg.deltaMode === 2 ? window.innerHeight : 1;
+        window.scrollBy({ top: msg.deltaY * multiplier });
+      }
+      return;
+    }
     if (msg.type === "zenshin-deck-escape") {
       // デッキ内フォーカス時の Escape はブリッジから転送されてくる
       closeTopLayer();

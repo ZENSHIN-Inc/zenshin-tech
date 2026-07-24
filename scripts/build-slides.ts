@@ -177,6 +177,7 @@ function loadAuthor(id: string): Author {
  *   - デッキ内蔵の OSD（ページ送り UI）を隠し、操作はビューワー側のバーに任せる
  *   - ページ状態（page / total）を postMessage で親へ通知（bespoke の active クラスを監視）
  *   - 最終ページで「次へ」の入力がもう一度来たら finished を通知（エンドカード表示用）
+ *   - ホイール操作はページ送りにせず、親ページの通常スクロールへ転送
  *   - 親からの prev / next / goto メッセージでページを動かす
  *   - 閲覧数はビューワー側（trackArticleView）が計測するため、ここでは POST しない
  */
@@ -223,6 +224,19 @@ function viewerBridgeScript(base: string): string {
   function finish() {
     parent.postMessage({ type: "zenshin-deck-finished" }, ORIGIN);
   }
+
+  // Marp 標準のホイールページ送りを止め、スライド上でも親ページを通常どおり
+  // 縦スクロールできるようにする。Ctrl + ホイールのブラウザズームは奪わない。
+  document.addEventListener("wheel", function (e) {
+    if (e.ctrlKey) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    parent.postMessage({
+      type: "zenshin-deck-wheel",
+      deltaY: e.deltaY,
+      deltaMode: e.deltaMode
+    }, ORIGIN);
+  }, { capture: true, passive: false });
 
   // 最終ページで「次へ」の入力がもう一度来たらエンドカードを出す（SpeakerDeck 風）。
   // capture で見るだけで止めない（bespoke 側では最終ページの次送りは no-op）。
