@@ -1,0 +1,522 @@
+<!--
+title: Artificial Analysis の見方
+description: AI モデル比較サイト Artificial Analysis の読み方ガイド。賢さ・速さ・値段の 3 軸の意味、単価や総合点に騙されないための注意点、2026 年 7 月時点の「結局どれを選ぶか」まで実際の画面で解説します。
+tags: [AI, 生成AI, LLM, ベンチマーク, 技術選定]
+author: 05-takahashi
+-->
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Artificial Analysis の見方</title>
+<style>
+:root {
+  --paper:    #f6f1e3;
+  --paper-2:  #fbf6ea;
+  --card:     #fffdf6;
+  --ink:      #2b2620;
+  --ink-soft: #4a4338;
+  --muted:    #8a8174;
+  --line:     #e6dec9;
+  --teal:  #1f7a6e;  --teal-soft:  #e0efe9;
+  --coral: #d96b4a;  --coral-soft: #fce7df;
+  --amber: #c98a1a;  --amber-soft: #fbeecc;
+  --rose:  #c5485f;  --rose-soft:  #fbe2e6;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "BIZ UDPGothic", Meiryo, system-ui, sans-serif;
+  line-height: 1.9;
+  font-size: 16px;
+}
+.container { max-width: 980px; margin: 0 auto; padding: 0 28px; }
+p { margin: 0 0 1.1em; }
+strong { font-weight: 800; }
+.mark {
+  background: linear-gradient(transparent 62%, rgba(217,107,74,.32) 62%, rgba(217,107,74,.32) 92%, transparent 92%);
+  padding: 0 .1em;
+  font-weight: 800;
+}
+.mark-teal {
+  background: linear-gradient(transparent 62%, rgba(31,122,110,.28) 62%, rgba(31,122,110,.28) 92%, transparent 92%);
+  padding: 0 .1em;
+  font-weight: 800;
+}
+
+/* ---- hero ---- */
+.hero { background: var(--paper-2); border-bottom: 1px solid var(--line); padding: 64px 0 40px; }
+.hero-kicker {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .85rem; letter-spacing: .12em; color: var(--teal); font-weight: 700;
+  margin-bottom: 12px;
+}
+.hero h1 { font-size: clamp(1.9rem, 4.5vw, 3rem); font-weight: 900; line-height: 1.3; margin: 0 0 18px; }
+.hero-lead { font-size: 1.05rem; color: var(--ink-soft); max-width: 44em; }
+.hero-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.hero-badge {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 999px;
+  padding: 6px 16px; font-weight: 800; font-size: .92rem; color: var(--ink-soft);
+}
+.hero-badge b { color: var(--coral); }
+
+/* ---- 3-axis strip ---- */
+.axis-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 26px 0 6px; }
+.axis {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 14px;
+  padding: 16px 18px;
+}
+.axis .axis-icon { font-size: 1.5rem; }
+.axis .axis-name { font-weight: 900; font-size: 1.05rem; margin: 2px 0; }
+.axis .axis-en { font-family: ui-monospace, Menlo, monospace; font-size: .78rem; color: var(--muted); }
+.axis .axis-desc { font-size: .88rem; color: var(--ink-soft); line-height: 1.7; margin-top: 6px; }
+.axis-1 { border-top: 4px solid #8b5cf6; }
+.axis-2 { border-top: 4px solid var(--amber); }
+.axis-3 { border-top: 4px solid var(--coral); }
+@media (max-width: 720px) { .axis-strip { grid-template-columns: 1fr; } }
+
+/* ---- section / heading ---- */
+section { padding: 46px 0 10px; }
+.ch-head { display: grid; grid-template-columns: auto 4px 1fr; gap: 16px; margin: 0 0 6px; align-items: stretch; }
+.ch-num { font-family: ui-monospace, Menlo, monospace; font-size: 1.7rem; font-weight: 900; color: var(--ink-soft); align-self: center; }
+.ch-bar { background: var(--coral); border-radius: 4px; }
+.ch-title { font-size: clamp(1.35rem, 3vw, 2rem); font-weight: 900; color: var(--ink); line-height: 1.4; align-self: center; }
+.ch-title em {
+  font-style: normal;
+  background: linear-gradient(transparent 62%, rgba(217,107,74,.32) 62%, rgba(217,107,74,.32) 92%, transparent 92%);
+  padding: 0 .1em;
+}
+.ch-lead { color: var(--muted); font-size: .95rem; margin: 0 0 20px; }
+h3 { font-size: 1.15rem; font-weight: 900; margin: 30px 0 10px; }
+
+/* ---- screenshot figure ---- */
+figure.shot { margin: 22px 0 8px; }
+figure.shot .frame {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
+  padding: 10px; box-shadow: 0 3px 14px rgba(43,38,32,.08);
+}
+figure.shot img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); }
+figure.shot figcaption { font-size: .82rem; color: var(--muted); margin-top: 8px; text-align: center; }
+
+/* ---- lookhere ---- */
+.lookhere {
+  border-left: 5px solid var(--teal); background: var(--teal-soft);
+  border-radius: 10px; padding: 14px 18px; margin: 14px 0 26px;
+}
+.lookhere-title { font-weight: 900; color: var(--teal); font-size: .95rem; margin-bottom: 4px; }
+.lookhere ul { margin: 0; padding-left: 1.3em; }
+.lookhere li { margin: 4px 0; font-size: .95rem; }
+
+/* ---- callouts ---- */
+.callout { border-left: 5px solid; border-radius: 10px; padding: 16px 18px; margin: 18px 0; font-weight: 700; }
+.callout-info    { border-color: #2563eb; background: #eff6ff; color: #1e3a8a; }
+.callout-success { border-color: #0f8f86; background: #e7f4f2; color: #164e4a; }
+.callout-warning { border-color: #d97706; background: #fff7ed; color: #7c2d12; }
+
+/* ---- pick cards ---- */
+.picks { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0 10px; }
+.pick { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+.pick-label { display: inline-block; border-radius: 999px; padding: 2px 14px; font-size: .82rem; font-weight: 900; margin-bottom: 8px; }
+.pick-brain  .pick-label { background: #ede9fe; color: #6d28d9; }
+.pick-bal    .pick-label { background: var(--teal-soft); color: var(--teal); }
+.pick-cheap  .pick-label { background: var(--amber-soft); color: #92600f; }
+.pick-fast   .pick-label { background: var(--coral-soft); color: var(--coral); }
+.pick-models { font-weight: 900; font-size: 1.02rem; line-height: 1.6; }
+.pick-note { font-size: .88rem; color: var(--ink-soft); margin-top: 6px; line-height: 1.7; }
+.pick-stat { font-family: ui-monospace, Menlo, monospace; font-size: .82rem; color: var(--muted); }
+@media (max-width: 720px) { .picks { grid-template-columns: 1fr; } }
+
+/* ---- steps ---- */
+.steps { counter-reset: step; list-style: none; margin: 22px 0; padding: 0; }
+.steps li {
+  counter-increment: step; position: relative;
+  padding: 14px 18px 14px 62px; margin: 10px 0;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 12px;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--coral); color: #fff; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  font-family: ui-monospace, Menlo, monospace;
+}
+.steps li b { display: block; }
+.steps li span { font-size: .9rem; color: var(--ink-soft); }
+
+/* ---- footer ---- */
+.page-foot { border-top: 1px solid var(--line); margin-top: 56px; padding: 26px 0 46px; font-size: .85rem; color: var(--muted); }
+.page-foot a { color: var(--teal); }
+
+a { color: var(--teal); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="hero-kicker">HOW TO READ ARTIFICIAL ANALYSIS</div>
+    <h1>Artificial Analysis の見方</h1>
+    <p class="hero-lead">
+      「AI モデルって結局どれがいいの？」に答えてくれる比較サイト
+      <a href="https://artificialanalysis.ai/" target="_blank" rel="noopener">Artificial Analysis</a>。
+      情報量が多くて最初は圧倒されますが、見るべき数字は実は 3 つだけです。
+      このページでは実際の画面を貼りながら、それぞれの数字の意味と「ここに騙されないで」というポイント、
+      そして 2026 年 7 月時点の「で、結局どれ？」までを解説します。
+    </p>
+    <div class="hero-badges">
+      <div class="hero-badge">見るのは <b>賢さ・速さ・値段</b> の 3 つだけ</div>
+      <div class="hero-badge">3 部門の王者は <b>全員別のモデル</b></div>
+      <div class="hero-badge">結論は <b>日付とセット</b> で覚える</div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+<section>
+  <h2 class="ch-head">
+    <span class="ch-num">01</span>
+    <span class="ch-bar"></span>
+    <span class="ch-title">Artificial Analysis は <em>AI モデルの価格.com</em></span>
+  </h2>
+  <p class="ch-lead">まずはこのサイトが何者かを 1 分で。</p>
+
+  <p>
+    Artificial Analysis は、世界中の AI モデル（ChatGPT の中身の GPT シリーズ、Claude、Gemini など
+    <strong>581 モデル</strong>）を、<strong>独立した第三者が同じ条件でテストして比較している無料サイト</strong>です。
+    家電を買うときの価格.com のように、「性能」と「値段」を横並びで見られます。
+    モデルを作っている会社の自己申告ではなく、運営が自分たちで毎日測り直しているのが信頼される理由です。
+  </p>
+  <p>
+    トップページを開くと、いきなりこのサイトの結論が 3 枚のカードで出てきます。
+  </p>
+
+  <figure class="shot">
+    <div class="frame">
+      <img src="/gallery/202607-artificial-analysis-guide/01-home-highlights.png"
+           alt="Artificial Analysis トップページ。Intelligence・Speed・Cost per Task の 3 つのハイライトチャートが並ぶ">
+    </div>
+    <figcaption>artificialanalysis.ai トップページ（2026-07-25 時点）</figcaption>
+  </figure>
+  <div class="lookhere">
+    <div class="lookhere-title">👀 ここを見る</div>
+    <ul>
+      <li>左から「賢さ」「速さ」「1 タスクあたりの値段」。<strong>この 3 枚がサイト全体の縮図</strong>です</li>
+      <li>賢さ 1 位は Claude Fable 5（60）、速さ 1 位は gpt-oss-120b（267 tok/s）、安さ 1 位は DeepSeek V4 Pro（$0.04）</li>
+      <li>つまり <span class="mark">3 部門の王者が全員違う</span>。だから「総合 1 位のモデル」は存在せず、用途で選ぶことになります</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2 class="ch-head">
+    <span class="ch-num">02</span>
+    <span class="ch-bar"></span>
+    <span class="ch-title">軸①賢さ：<em>Intelligence Index</em></span>
+  </h2>
+  <p class="ch-lead">いちばん目立つ数字。ただし「総合点」であることに注意。</p>
+
+  <p>
+    Intelligence Index は、Artificial Analysis が独自に行う <strong>9 種類の試験の結果を 1 つにまとめた総合点</strong>です
+    （2026 年 7 月時点のバージョンは v4.1）。試験の中身は、実務っぽい作業・銀行業務のシミュレーション・
+    プログラミング・科学の難問など多岐にわたります。ざっくり「<span class="mark-teal">偏差値のような総合学力</span>」と
+    捉えれば OK です。
+  </p>
+
+  <figure class="shot">
+    <div class="frame">
+      <img src="/gallery/202607-artificial-analysis-guide/02-intelligence-index.png"
+           alt="Artificial Analysis Intelligence Index のランキングチャート。Claude Fable 5 が 60 で首位">
+    </div>
+    <figcaption>Intelligence Index v4.1 ランキング（2026-07-25 時点）</figcaption>
+  </figure>
+  <div class="lookhere">
+    <div class="lookhere-title">👀 ここを見る</div>
+    <ul>
+      <li>上位は Claude Fable 5（60）・GPT-5.6 Sol（59）・Kimi K3（57）・Claude Opus 4.8（56）と<strong>数点差の団子状態</strong>。1〜2 点差は「ほぼ同格」と読みます</li>
+      <li>棒の下の <strong>💡電球マーク</strong>は「考えてから答える reasoning モデル」の印。賢い代わりに遅くて高い傾向があります</li>
+      <li>モデル名の後ろの <strong>(max) や (high)</strong> は「どれだけ長く考えさせるかの設定」。同じモデルでも設定で点数が変わります</li>
+    </ul>
+  </div>
+
+  <div class="callout callout-warning">
+    Intelligence Index は試験内容が定期的に改訂されます（v4 → v4.1 など）。
+    バージョンが変わると全モデルの点数が変わるので、昔の記事の数字と今の数字を直接比べてはいけません。
+  </div>
+</section>
+
+<section>
+  <h2 class="ch-head">
+    <span class="ch-num">03</span>
+    <span class="ch-bar"></span>
+    <span class="ch-title">軸②速さ：<em>「出る速さ」と「待ち時間」</em>は別物</span>
+  </h2>
+  <p class="ch-lead">体感の速さを決めるのはむしろ後者。</p>
+
+  <p>
+    速さの指標は 2 つあります。1 つ目は <strong>Output Speed（1 秒あたりに何文字ぶん出てくるか、tokens/s）</strong>。
+    長い文章を書かせるときはこれが効きます。
+  </p>
+
+  <figure class="shot">
+    <div class="frame">
+      <img src="/gallery/202607-artificial-analysis-guide/04-output-speed.png"
+           alt="Output Speed のランキングチャート。Gemini 3.5 Flash-Lite が 449 tokens/s で首位">
+    </div>
+    <figcaption>Output Speed（2026-07-25 時点）</figcaption>
+  </figure>
+  <div class="lookhere">
+    <div class="lookhere-title">👀 ここを見る</div>
+    <ul>
+      <li>1 位 Gemini 3.5 Flash-Lite は <strong>449 tok/s</strong>、最下位 Kimi K3 は 33 tok/s。<span class="mark">同じ「AI」でも 13 倍以上の差</span>があります</li>
+      <li>賢さ上位の Claude Fable 5（74）や GPT-5.6 Sol（64）は真ん中より下。<strong>賢さと速さはだいたいトレードオフ</strong>です</li>
+    </ul>
+  </div>
+
+  <p>
+    2 つ目が <strong>Latency（質問してから答えが出始めるまでの待ち時間）</strong>。
+    チャットで使ったときの「体感の速さ」はほぼこれで決まります。
+    考えてから答える reasoning モデルは、この「考えている時間」が待ち時間に丸ごと乗ってきます。
+  </p>
+
+  <figure class="shot">
+    <div class="frame">
+      <img src="/gallery/202607-artificial-analysis-guide/05-latency-ttft.png"
+           alt="Latency（最初の回答トークンまでの秒数）のチャート。思考時間込みで最大 183.7 秒">
+    </div>
+    <figcaption>Latency: Time To First Answer Token（2026-07-25 時点）</figcaption>
+  </figure>
+  <div class="lookhere">
+    <div class="lookhere-title">👀 ここを見る</div>
+    <ul>
+      <li>速い組は <strong>10 秒前後</strong>、いちばん考える設定の Claude Sonnet 5 (max) は <strong>183.7 秒 = 約 3 分</strong>待ちます</li>
+      <li>棒の内訳の濃い部分が「考えている時間」。<span class="mark">賢い設定ほど待たされる</span>のが一目で分かります</li>
+      <li>対話でサクサク使いたい用途と、放置してよい重い分析とで、選ぶべきモデルが変わる理由がここにあります</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2 class="ch-head">
+    <span class="ch-num">04</span>
+    <span class="ch-bar"></span>
+    <span class="ch-title">軸③値段：単価ではなく<em>「1 タスクいくら」</em>で見る</span>
+  </h2>
+  <p class="ch-lead">ここがこのサイトで一番エラいところ。</p>
+
+  <p>
+    AI の料金表は普通「100 万トークン（≒文字量の単位）あたり何ドル」という<strong>単価</strong>で書かれています。
+    ところが reasoning モデルは考えごとを大量に書き出すので、<strong>同じ仕事をさせても使う文字量が全然違う</strong>。
+    単価が安くてもたくさん喋るモデルなら、請求額は高くつきます。
+  </p>
+  <p>
+    そこで Artificial Analysis は「賢さ試験を 1 問解かせたら実際いくらかかったか」＝
+    <strong>Cost per Task</strong> を出してくれています。<span class="mark">値段はこの数字で比べるのが正解</span>です。
+  </p>
+
+  <figure class="shot">
+    <div class="frame">
+      <img src="/gallery/202607-artificial-analysis-guide/06-cost-per-task.png"
+           alt="Cost per Intelligence Index Task のチャート。DeepSeek V4 Flash の $0.02 から Claude Fable 5 の $2.75 まで">
+    </div>
+    <figcaption>Cost per Intelligence Index Task（2026-07-25 時点）</figcaption>
+  </figure>
+  <div class="lookhere">
+    <div class="lookhere-title">👀 ここを見る</div>
+    <ul>
+      <li>1 タスクあたり最安 $0.02（DeepSeek V4 Flash）から最高 $2.75（Claude Fable 5）まで、<strong>137 倍の開き</strong>があります</li>
+      <li>棒の内訳で「答え」「考えごと（Reasoning）」など<strong>何にお金がかかっているか</strong>も見えます</li>
+    </ul>
+  </div>
+
+  <p>
+    「どれだけ喋るか」自体も Output Tokens per Task というチャートで確認できます。
+    同じ試験を受けさせて、少ないモデルは 1.2 万トークン、多いモデルは <strong>6.9 万トークン</strong>。
+    単価だけ見て選ぶと、この「おしゃべり度」の差に足をすくわれます。
+  </p>
+
+  <figure class="shot">
+    <div class="frame">
+      <img src="/gallery/202607-artificial-analysis-guide/07-output-tokens.png"
+           alt="Output Tokens per Intelligence Index Task のチャート。モデルによって 12k から 69k トークンまで差がある">
+    </div>
+    <figcaption>Output Tokens per Task。「おしゃべり度」はモデルで約 6 倍違う（2026-07-25 時点）</figcaption>
+  </figure>
+
+  <div class="callout callout-info">
+    覚え方：<strong>実費 = 単価 × おしゃべり度</strong>。単価表だけでは実費は分からない。
+  </div>
+</section>
+
+<section>
+  <h2 class="ch-head">
+    <span class="ch-num">05</span>
+    <span class="ch-bar"></span>
+    <span class="ch-title">騙されやすいポイント<em>あと 2 つ</em></span>
+  </h2>
+  <p class="ch-lead">総合点の罠と、配信元の罠。</p>
+
+  <h3>総合点が高い ＝ 自分の用途で最強、ではない</h3>
+  <p>
+    Intelligence Index は 9 試験の平均なので、<strong>用途別に見ると順位が入れ替わります</strong>。
+    ページを下にスクロールすると試験ごとの内訳（Intelligence Evaluations）があり、たとえば
+    総合 3 位の Kimi K3 が「ツールを使う銀行業務」の試験では 1 位、
+    ターミナル操作の試験では GPT-5.6 Terra が 1 位、という具合です。
+  </p>
+
+  <figure class="shot">
+    <div class="frame">
+      <img src="/gallery/202607-artificial-analysis-guide/03-eval-breakdown.png"
+           alt="試験別の内訳チャート。GDPval-AA v2、τ³-Banking、Terminal-Bench、SciCode などで順位が入れ替わる">
+    </div>
+    <figcaption>試験別内訳。総合点では見えない得意・不得意がある（2026-07-25 時点）</figcaption>
+  </figure>
+  <div class="lookhere">
+    <div class="lookhere-title">👀 ここを見る</div>
+    <ul>
+      <li>自分の用途に近い試験を 1 つ選んで見る：コーディングなら Terminal-Bench / SciCode、事務作業の自動化なら GDPval-AA、ツール連携なら τ³-Banking</li>
+      <li><span class="mark">総合点で候補を絞り、用途別の試験で決める</span>のが正しい使い方です</li>
+    </ul>
+  </div>
+
+  <h3>同じモデルでも「どこから借りるか」で速さが激変する</h3>
+  <p>
+    オープンなモデル（誰でもホスティングできるモデル）は、<strong>同じモデルを複数の会社が配信</strong>しています。
+    モデルが同じなら賢さは同じですが、<strong>速さと値段は配信元でまったく違います</strong>。
+    ページ末尾の API Provider Performance で確認できます。
+  </p>
+
+  <figure class="shot">
+    <div class="frame">
+      <img src="/gallery/202607-artificial-analysis-guide/09-provider-comparison.png"
+           alt="gpt-oss-120b を配信する 19 プロバイダーの速度と価格の散布図。Cerebras が約 2000 tokens/s で突出">
+    </div>
+    <figcaption>同じ gpt-oss-120b でも配信元 19 社で速度・価格はバラバラ（2026-07-25 時点）</figcaption>
+  </figure>
+  <div class="lookhere">
+    <div class="lookhere-title">👀 ここを見る</div>
+    <ul>
+      <li>同じモデルなのに、速い配信元（Cerebras、約 2,000 tok/s）と遅い配信元では <strong>20 倍以上の差</strong></li>
+      <li>オープンモデルを使うときは「モデルを選んで終わり」ではなく<strong>配信元まで選ぶ</strong></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2 class="ch-head">
+    <span class="ch-num">06</span>
+    <span class="ch-bar"></span>
+    <span class="ch-title">1 枚で選ぶなら<em>この散布図</em></span>
+  </h2>
+  <p class="ch-lead">賢さ × 値段。左上にいるモデルだけが選択肢。</p>
+
+  <p>
+    3 つの軸を覚えたら、実際のモデル選びで最初に開くのはこの散布図です。
+    <strong>縦軸が賢さ、横軸が 1 タスクあたりの値段</strong>（右に行くほど高い）。
+    つまり<span class="mark">左上にあるモデルほど「賢いのに安い」</span>ことになります。
+    サイトも左上を「Most attractive quadrant（一番おいしい領域）」として緑色で示してくれています。
+  </p>
+
+  <figure class="shot">
+    <div class="frame">
+      <img src="/gallery/202607-artificial-analysis-guide/08-intel-vs-cost.png"
+           alt="Intelligence Index と Cost per Task の散布図。左上の Most attractive quadrant が緑色で示されている">
+    </div>
+    <figcaption>Intelligence Index vs. Cost per Task（2026-07-25 時点）</figcaption>
+  </figure>
+  <div class="lookhere">
+    <div class="lookhere-title">👀 ここを見る</div>
+    <ul>
+      <li>ある点の<strong>左上に別の点がある</strong>なら、そのモデルは「もっと賢くて安い代替がいる」ということ。原則選ぶ理由がありません</li>
+      <li>右端の Claude Fable 5 は「最高の賢さに $2.75 払うか？」という問い。<strong>最高性能が必要な仕事のときだけ Yes</strong> になります</li>
+      <li>横軸は対数（1 目盛りで 10 倍）なので、見た目のちょっとの右移動が値段では大差です</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2 class="ch-head">
+    <span class="ch-num">07</span>
+    <span class="ch-bar"></span>
+    <span class="ch-title">で、結局どれ？<em>（2026-07-25 時点）</em></span>
+  </h2>
+  <p class="ch-lead">用途別 4 枠。数字はすべて上のチャートから。</p>
+
+  <div class="picks">
+    <div class="pick pick-brain">
+      <span class="pick-label">🧠 とにかく賢く</span>
+      <div class="pick-models">Claude Fable 5 / GPT-5.6 Sol</div>
+      <div class="pick-stat">賢さ 60・59 ｜ $2.75・$1.04/タスク</div>
+      <div class="pick-note">最高難度の分析・設計・重要文書。値段と待ち時間は覚悟の上で。</div>
+    </div>
+    <div class="pick pick-bal">
+      <span class="pick-label">⚖️ バランス（コスパ）</span>
+      <div class="pick-models">GLM-5.2 / Muse Spark 1.1 / Gemini 3.6 Flash</div>
+      <div class="pick-stat">賢さ 51・51・50 ｜ $0.32・$0.26・$0.50/タスク</div>
+      <div class="pick-note">賢さ上位の 8 割強を 1/10 の値段で。日常業務の主力はこの枠。散布図の「おいしい領域」の住人たち。</div>
+    </div>
+    <div class="pick pick-cheap">
+      <span class="pick-label">💰 徹底的に安く</span>
+      <div class="pick-models">DeepSeek V4 Pro / MiniMax-M3</div>
+      <div class="pick-stat">賢さ 44・44 ｜ $0.04・$0.12/タスク</div>
+      <div class="pick-note">大量処理・下書き・分類など「そこそこ賢ければいい」仕事を桁違いの安さで回す枠。</div>
+    </div>
+    <div class="pick pick-fast">
+      <span class="pick-label">⚡ タイパ最優先</span>
+      <div class="pick-models">Gemini 3.5 Flash-Lite / Gemini 3.6 Flash</div>
+      <div class="pick-stat">449・251 tok/s ｜ 待ち時間 10.7 秒・14.0 秒</div>
+      <div class="pick-note">対話 UI やリアルタイム処理。3.6 Flash は賢さ 50 で速さも両立する優等生。</div>
+    </div>
+  </div>
+
+  <div class="callout callout-warning">
+    この結論は <strong>2026 年 7 月 25 日時点</strong>のスナップショットです。このサイトの順位は数週間で入れ替わるので、
+    「この 4 枠の中身は見るたびに更新する」前提で、枠の考え方だけ持ち帰ってください。
+  </div>
+</section>
+
+<section>
+  <h2 class="ch-head">
+    <span class="ch-num">08</span>
+    <span class="ch-bar"></span>
+    <span class="ch-title">明日からの<em>見る順番</em></span>
+  </h2>
+  <p class="ch-lead">モデル選定で迷ったら、この 5 ステップ。</p>
+
+  <ol class="steps">
+    <li><b>散布図（賢さ × Cost per Task）で候補を 2〜3 個に絞る</b>
+      <span>左上の「おいしい領域」と、その境界線上のモデルだけ見ればよい</span></li>
+    <li><b>用途に近い試験の内訳で順位を確認する</b>
+      <span>コーディングなら Terminal-Bench / SciCode、事務作業なら GDPval-AA</span></li>
+    <li><b>速さの要件を確認する</b>
+      <span>対話で使うなら Latency（待ち時間）、大量生成なら Output Speed</span></li>
+    <li><b>オープンモデルなら配信元も比較する</b>
+      <span>API Provider Performance で速さと値段が 20 倍変わる</span></li>
+    <li><b>最後は自分のタスクで試す</b>
+      <span>ベンチマークはあくまで模試。本番の入試（実際の業務データ）で最終確認する</span></li>
+  </ol>
+
+  <div class="callout callout-success">
+    まとめ：<strong>賢さ・速さ・値段の 3 軸で見る。値段は単価でなく Cost per Task。総合点で絞って用途別で決める。
+    結論には必ず日付を添える。</strong>これだけで Artificial Analysis は読めます。
+  </div>
+</section>
+
+</main>
+
+<footer class="page-foot">
+  <div class="container">
+    <p>
+      本ページのスクリーンショットはすべて
+      <a href="https://artificialanalysis.ai/" target="_blank" rel="noopener">Artificial Analysis</a>
+      より 2026 年 7 月 25 日に取得したものです。チャートの数値・順位は日々更新されるため、最新の状況は必ず本家サイトでご確認ください。
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -7,6 +7,7 @@ dist/
 
 # scripts/build-slides.ts の生成物
 public/slides/
+public/htmls/
 public/assets/
 public/gallery/
 src/data/
