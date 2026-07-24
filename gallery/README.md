@@ -1,8 +1,7 @@
 # gallery/ — CG・生成画像の公開素材
 
-ここに画像を置いて main に push すると、自動で以下に公開されます。
+ここに画像を置いて main に push すると、自動で以下に公開されます（公開一覧ページはありません。スライド・HTML ページ等からの参照用）。
 
-- 一覧ページ: https://tech.zenshin-inc.co.jp/gallery/
 - 直リンク: `https://tech.zenshin-inc.co.jp/gallery/<フォルダ名>/<ファイル名>`
 
 ## 命名規則

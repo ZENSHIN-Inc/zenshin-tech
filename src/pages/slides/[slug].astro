@@ -18,10 +18,12 @@ import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd.astro";
 import ShareMenu from "@/components/ShareMenu.astro";
 import RelatedPosts from "@/components/RelatedPosts.astro";
 import RelatedSlides from "@/components/RelatedSlides.astro";
+import RelatedHtmls from "@/components/RelatedHtmls.astro";
 import { Icon } from "astro-icon/components";
 import { getCollection } from "astro:content";
 import { ROUTES } from "@/consts/routes";
 import { filterPublished } from "@/lib/drafts";
+import { getHtmls } from "@/lib/htmls";
 
 export async function getStaticPaths() {
   const slides = await getCollection("slides");
@@ -44,10 +46,10 @@ function formatDate(date: Date): string {
 }
 
 // エンドカード（最終ページの先）に出す関連コンテンツ。
-// スライド・記事を混ぜてタグ一致数が多い順 → 新しい順。一致 0 件も後ろに並ぶので
+// スライド・記事・HTML ページを混ぜてタグ一致数が多い順 → 新しい順。一致 0 件も後ろに並ぶので
 // 件数が足りなければ新着で自然に埋まる（見終わった直後の回遊導線として常に出す）
 interface EndCardItem {
-  type: "article" | "slide";
+  type: "article" | "slide" | "html";
   title: string;
   url: string;
   thumb: string;
@@ -56,6 +58,7 @@ interface EndCardItem {
 }
 
 const allSlides = await getCollection("slides");
+const allHtmls = await getHtmls();
 const posts = filterPublished(await getCollection("blog"));
 const candidates: EndCardItem[] = [
   ...allSlides
@@ -77,6 +80,14 @@ const candidates: EndCardItem[] = [
     date: p.data.date,
     tags: p.data.tags,
   })),
+  ...allHtmls.map<EndCardItem>((h) => ({
+    type: "html",
+    title: h.data.title,
+    url: ROUTES.htmlView(h.id),
+    thumb: h.data.urls.ogImage,
+    date: h.data.date,
+    tags: h.data.tags,
+  })),
 ];
 const endCardItems = candidates
   .map((c) => ({ c, score: c.tags.filter((t) => slide.data.tags.includes(t)).length }))
@@ -84,7 +95,7 @@ const endCardItems = candidates
   .slice(0, 3)
   .map((x) => x.c);
 
-const TYPE_LABEL = { article: "記事", slide: "スライド" } as const;
+const TYPE_LABEL = { article: "記事", slide: "スライド", html: "HTML" } as const;
 ---
 
 <BaseLayout
@@ -280,6 +291,7 @@ const TYPE_LABEL = { article: "記事", slide: "スライド" } as const;
     <div class="blog-page-bg py-10">
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-20">
         <RelatedSlides tags={slide.data.tags} currentId={slide.id} />
+        <RelatedHtmls tags={slide.data.tags} class="mt-10" />
         <RelatedPosts currentSlug="" tags={slide.data.tags} class="mt-10" />
         <div class="mt-10">
           <a href={ROUTES.home} class="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-all active:opacity-70 active:scale-95">

@@ -1,15 +1,17 @@
 /**
- * RSS フィード（/rss.xml）— ブログ記事とスライドを日付降順でマージして配信する
+ * RSS フィード（/rss.xml）— ブログ記事・スライド・HTML ページを日付降順でマージして配信する
  */
 import rss from "@astrojs/rss";
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 import { filterPublished } from "@/lib/drafts";
 import { ROUTES } from "@/consts/routes";
+import { getHtmls } from "@/lib/htmls";
 
 export const GET: APIRoute = async (context) => {
   const posts = filterPublished(await getCollection("blog"));
   const slides = await getCollection("slides");
+  const htmls = await getHtmls();
 
   const items = [
     ...posts.map((p) => ({
@@ -24,6 +26,12 @@ export const GET: APIRoute = async (context) => {
       description: s.data.description,
       pubDate: s.data.date,
       link: s.data.urls.page,
+    })),
+    ...htmls.map((h) => ({
+      title: `[HTML資料] ${h.data.title}`,
+      description: h.data.description,
+      pubDate: h.data.date,
+      link: h.data.urls.page,
     })),
   ].sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime());
 

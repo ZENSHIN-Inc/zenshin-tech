@@ -1,15 +1,16 @@
 /**
- * ブログ記事とスライドを「コンテンツアイテム」に正規化する共通ロジック。
+ * ブログ記事・スライド・HTML ページを「コンテンツアイテム」に正規化する共通ロジック。
  * トップ・タグページ・月別アーカイブ・サイドバー集計が同じ形で扱う。
  *
- * カードのサムネはブログ・スライドとも OGP 画像（ゴールド枠 + 著者アイコン + 制作日）で統一する。
+ * カードのサムネは全種別とも OGP 画像（ゴールド枠 + 著者アイコン + 制作日）で統一する。
  */
 import { getCollection } from "astro:content";
 import { ROUTES } from "@/consts/routes";
 import { filterPublished } from "@/lib/drafts";
+import { getHtmls } from "@/lib/htmls";
 
 export interface ContentItem {
-  contentType: "article" | "slide";
+  contentType: "article" | "slide" | "html";
   href: string;
   ogImageSrc: string;
   title: string;
@@ -19,14 +20,15 @@ export interface ContentItem {
   external: boolean;
   pdfHref?: string;
   isDraft?: boolean;
-  /** 閲覧数カウンター用の slug（記事 = ブログ slug、スライド = デッキ slug） */
+  /** 閲覧数カウンター用の slug（記事 = ブログ slug、スライド・HTML = ファイル名由来の slug） */
   slug?: string;
 }
 
-/** blog + slides を日付降順のコンテンツアイテム配列にして返す */
+/** blog + slides + htmls を日付降順のコンテンツアイテム配列にして返す */
 export async function loadContentItems(): Promise<ContentItem[]> {
   const posts = filterPublished(await getCollection("blog"));
   const slides = await getCollection("slides");
+  const htmls = await getHtmls();
 
   const articleItems: ContentItem[] = posts.map((post) => ({
     contentType: "article",
@@ -56,7 +58,22 @@ export async function loadContentItems(): Promise<ContentItem[]> {
     slug: slide.id,
   }));
 
-  return [...articleItems, ...slideItems].sort((a, b) => b.date.getTime() - a.date.getTime());
+  // HTML ページもスライドと同じ扱い（同一タブ・ビューワーページへ遷移）
+  const htmlItems: ContentItem[] = htmls.map((page) => ({
+    contentType: "html",
+    href: page.data.urls.page,
+    ogImageSrc: page.data.urls.ogImage,
+    title: page.data.title,
+    description: page.data.description,
+    tags: page.data.tags,
+    date: page.data.date,
+    external: false,
+    slug: page.id,
+  }));
+
+  return [...articleItems, ...slideItems, ...htmlItems].sort(
+    (a, b) => b.date.getTime() - a.date.getTime(),
+  );
 }
 
 /** date から "YYYY-MM" 形式の年月キーを返す（月別アーカイブ用） */

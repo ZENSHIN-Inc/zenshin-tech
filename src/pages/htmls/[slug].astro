@@ -1,0 +1,159 @@
+---
+/**
+ * HTML ページビューワー
+ *
+ * ビルド済みの素の HTML（/htmls/<id>.html）を same-origin の iframe で
+ * サイトの額縁（ヘッダー・タイトル帯・関連コンテンツ・フッター）に埋め込む。
+ * 原稿側にはビルド時（scripts/build-slides.ts）に連携スクリプトが注入されており、
+ * postMessage で次をやり取りする:
+ *   - html-height: 本文の高さ → iframe の高さを合わせる（iframe 内スクロールを作らない）
+ *   - html-scroll: ページ内アンカーのジャンプ先 → 親ページのスクロールに変換
+ * 閲覧数はこのページが記事・スライドと同じ仕組み（trackArticleView）で計測する。
+ */
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Breadcrumbs from "@/components/Breadcrumbs.astro";
+import BreadcrumbJsonLd from "@/components/BreadcrumbJsonLd.astro";
+import ShareMenu from "@/components/ShareMenu.astro";
+import RelatedPosts from "@/components/RelatedPosts.astro";
+import RelatedSlides from "@/components/RelatedSlides.astro";
+import RelatedHtmls from "@/components/RelatedHtmls.astro";
+import { Icon } from "astro-icon/components";
+import { ROUTES } from "@/consts/routes";
+import { getHtmls } from "@/lib/htmls";
+
+export async function getStaticPaths() {
+  const htmls = await getHtmls();
+  return htmls.map((page) => ({
+    params: { slug: page.id },
+    props: { page },
+  }));
+}
+
+const { page } = Astro.props;
+const siteUrl = Astro.site?.toString().replace(/\/$/, "") || "";
+const pageUrl = `${siteUrl}${ROUTES.htmlView(page.id)}`;
+
+/** 日付を YYYY.MM.DD 形式にフォーマット */
+function formatDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}.${m}.${d}`;
+}
+---
+
+<BaseLayout
+  title={`${page.data.title} | ZENSHIN 技術ブログ`}
+  description={page.data.description}
+  ogType="article"
+  ogImage={page.data.urls.ogImage}
+>
+  <BreadcrumbJsonLd items={[
+    { name: "トップ", path: ROUTES.home },
+    { name: page.data.title, path: ROUTES.htmlView(page.id) },
+  ]} />
+  <Header />
+
+  <main id="main-content" class="flex-1">
+    {/* タイトル帯 — スライドビューワーと同じダークの額縁 */}
+    <section class="bg-surface-dark pt-28 pb-8" data-pagefind-body>
+      <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <div class="mb-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          <Breadcrumbs
+            items={[
+              { name: "トップ", path: ROUTES.home },
+              { name: page.data.title },
+            ]}
+          />
+          <a
+            href={ROUTES.home}
+            class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-on-surface-dark/75 transition-colors hover:text-[#d8c49a]"
+          >
+            <Icon name="heroicons:arrow-left-20-solid" class="h-4 w-4" aria-hidden="true" />
+            コンテンツ一覧に戻る
+          </a>
+        </div>
+        <h1 class="text-2xl font-bold leading-snug text-on-surface-dark md:text-3xl">
+          {page.data.title}
+        </h1>
+
+        {/* メタバー — 日付・閲覧数・共有 */}
+        <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <p class="flex items-center gap-2 text-xs text-on-surface-dark/70">
+            <time datetime={page.data.date.toISOString()} class="tabular-nums">
+              {formatDate(page.data.date)}
+            </time>
+            <span
+              class="inline-flex items-center gap-1"
+              data-article-views
+              data-view-slug={page.id}
+              hidden
+            >
+              <Icon name="heroicons:eye-20-solid" class="h-3.5 w-3.5 opacity-70" aria-hidden="true" />
+              <span class="sr-only">閲覧数</span>
+              <span class="tabular-nums" data-article-views-value>0</span>
+              <span class="sr-only">回</span>
+            </span>
+          </p>
+          <div class="ml-auto flex items-center gap-2.5">
+            <ShareMenu url={pageUrl} title={page.data.title} />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {/* 本文 — 原稿 HTML を全高 iframe で埋め込む（スクロールは親ページに任せる） */}
+    <div class="blog-page-bg">
+      {/* 高さはブリッジの height 通知で実コンテンツ高に揃うため、iframe 内スクロールは発生しない */}
+      <iframe
+        id="html-frame"
+        src={ROUTES.htmlEmbed(page.id)}
+        title={page.data.title}
+        class="block w-full"
+        style="height: 100vh;"
+      ></iframe>
+    </div>
+
+    {/* 関連コンテンツ（明るい帯） */}
+    <div class="blog-page-bg border-t border-border py-10">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-20">
+        <RelatedHtmls tags={page.data.tags} currentId={page.id} />
+        <RelatedSlides tags={page.data.tags} currentId="" class="mt-10" />
+        <RelatedPosts currentSlug="" tags={page.data.tags} class="mt-10" />
+        <div class="mt-10">
+          <a href={ROUTES.home} class="inline-flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-all active:opacity-70 active:scale-95">
+            <Icon name="heroicons:arrow-left-20-solid" class="h-4 w-4" aria-hidden="true" />
+            コンテンツ一覧に戻る
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<script>
+  import { trackArticleView } from "@/lib/blog-views";
+  trackArticleView();
+</script>
+
+<script>
+  // 原稿 iframe との postMessage 連携（送受信の相手は build-slides.ts が注入したブリッジ）
+  const frame = document.getElementById("html-frame") as HTMLIFrameElement | null;
+
+  window.addEventListener("message", (e: MessageEvent) => {
+    if (e.origin !== location.origin) return;
+    const data: unknown = e.data;
+    if (typeof data !== "object" || data === null) return;
+    const msg = data as { type?: string; height?: number; top?: number };
+    if (msg.type === "zenshin-html-height" && typeof msg.height === "number" && frame) {
+      frame.style.height = `${Math.max(240, msg.height)}px`;
+    } else if (msg.type === "zenshin-html-scroll" && typeof msg.top === "number" && frame) {
+      const frameTop = frame.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: frameTop + msg.top, behavior: "smooth" });
+    }
+  });
+</script>

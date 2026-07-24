@@ -31,6 +31,9 @@ export const ROUTES = {
   // スライドのビューワーページ（SpeakerDeck 風）と、iframe で埋め込む Marp 生成 HTML
   slideView: (id: string) => `/slides/${id}/` as const,
   slideEmbed: (id: string) => `/slides/${id}.html` as const,
+  // HTML ページのビューワーページと、iframe で埋め込む素の HTML（htmls/ 配下の原稿由来）
+  htmlView: (id: string) => `/htmls/${id}/` as const,
+  htmlEmbed: (id: string) => `/htmls/${id}.html` as const,
   // タグ・月別の絞り込みは専用 URL を切らず、トップのクエリパラメータで表現する
   tag: (tag: string) => `/?tag=${encodeURIComponent(tag)}` as const,
   archive: (yearMonth: string) => `/?month=${yearMonth}` as const,

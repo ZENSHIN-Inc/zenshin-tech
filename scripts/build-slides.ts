@@ -1,5 +1,5 @@
 /**
- * スライドの prebuild スクリプト（bun scripts/build-slides.ts で実行。`bun run build` の前段）
+ * スライド・HTML ページの prebuild スクリプト（bun scripts/build-slides.ts で実行。`bun run build` の前段）
  *
  * 1. slides/*.md を marp-cli（Node API）で HTML / PDF / サムネイル PNG に変換して public/slides/ へ出力
  *    - HTML はデッキごとに変換し、frontmatter の title / description から OGP メタを注入する
@@ -7,25 +7,31 @@
  *      SpeakerDeck 風ビューワーページが iframe で埋め込む前提。ページ状態の postMessage 通知・
  *      最終ページ後のエンドカード通知・埋め込み時の OSD 非表示・直接アクセス時の閲覧数カウント）
  *    - OGP 画像（1200x630、zenshin-hp の技術ブログと同意匠）もデッキごとに生成する
- * 2. assets/（ブランド素材）と gallery/ 配下の画像を public/ へコピー
- *    - gallery/ はスライド挿絵などの画像素材置き場。/gallery/<フォルダ>/<ファイル> で配信は
- *      されるが、公開一覧ページは持たない（2026-07 にギャラリーページを廃止）
- * 3. デッキのメタ情報を src/data/slides.json へ出力
- *    - content.config.ts の slides コレクション（file ローダー）が読む
+ * 2. htmls/*.html（self-contained な HTML ページ原稿）を public/htmls/ へ出力
+ *    - 先頭の HTML コメントメタ（title / description / tags / author）を読み、
+ *      OGP メタ・canonical・ビューワー連携スクリプト（iframe 高さ通知 + 閲覧数カウント）を注入する
+ *    - OGP 画像（1200x630）とサムネイル PNG（1280x720 の先頭ビュー、スライドと同アスペクト）も生成する
+ * 3. assets/（ブランド素材）と gallery/ 配下の画像を public/ へコピー
+ *    - gallery/ はスライド・HTML ページの挿絵などの画像素材置き場。/gallery/<フォルダ>/<ファイル> で
+ *      配信はされるが、公開一覧ページは持たない（2026-07 にギャラリーページを廃止）
+ * 4. メタ情報を src/data/slides.json・src/data/htmls.json へ出力
+ *    - content.config.ts の slides / htmls コレクション（file ローダー）が読む
  *
  * 一覧ページ・フィード（/index.json）・RSS は Astro 側（src/pages/）が生成する。
- * public/slides・public/assets・public/gallery・src/data は生成物（gitignore 済み）。
+ * public/slides・public/htmls・public/assets・public/gallery・src/data は生成物（gitignore 済み）。
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { marpCli } from "@marp-team/marp-cli";
+import puppeteer from "puppeteer-core";
 import { renderOgImage } from "../src/lib/og-image";
 import { validateTitleWidth } from "../src/lib/title-width";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SLIDES_DIR = path.join(ROOT, "slides");
+const HTMLS_DIR = path.join(ROOT, "htmls");
 const GALLERY_DIR = path.join(ROOT, "gallery");
 const ASSETS_DIR = path.join(ROOT, "assets");
 const PUBLIC = path.join(ROOT, "public");
@@ -91,11 +97,12 @@ function parseTags(value: string | undefined): string[] {
 // 1. クリーン
 // ---------------------------------------------------------------------------
 
-for (const dir of ["slides", "assets", "gallery"]) {
+for (const dir of ["slides", "htmls", "assets", "gallery"]) {
   fs.rmSync(path.join(PUBLIC, dir), { recursive: true, force: true });
 }
 fs.rmSync(DATA_DIR, { recursive: true, force: true });
 fs.mkdirSync(path.join(PUBLIC, "slides"), { recursive: true });
+fs.mkdirSync(path.join(PUBLIC, "htmls"), { recursive: true });
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
 // ブランド素材（ロゴ・favicon など）。スライドからは ../assets/... で参照する
@@ -115,18 +122,28 @@ const slideFiles = fs.existsSync(SLIDES_DIR)
 // 2. スライドのメタ情報を収集
 // ---------------------------------------------------------------------------
 
-/** 先頭の YAML front matter を素朴にパースする（title / description のみ使用） */
-function parseFrontMatter(markdown: string): Record<string, string> {
-  const match = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+/** `key: value` 行の並びをパースする（YAML frontmatter / HTML コメントメタ共用） */
+function parseMetaLines(block: string): Record<string, string> {
   const result: Record<string, string> = {};
-  if (!match || match[1] === undefined) return result;
-  for (const line of match[1].split(/\r?\n/)) {
+  for (const line of block.split(/\r?\n/)) {
     const kv = line.match(/^(\w[\w-]*):\s*(.+)$/);
     if (kv && kv[1] !== undefined && kv[2] !== undefined) {
       result[kv[1]] = kv[2].replace(/^['"]|['"]$/g, "").trim();
     }
   }
   return result;
+}
+
+/** 先頭の YAML front matter を素朴にパースする（title / description のみ使用） */
+function parseFrontMatter(markdown: string): Record<string, string> {
+  const match = markdown.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  return match && match[1] !== undefined ? parseMetaLines(match[1]) : {};
+}
+
+/** HTML ページ原稿の先頭コメントメタ（<!-- title: ... -->）をパースする */
+function parseHtmlMeta(html: string): Record<string, string> {
+  const match = html.match(/^(?:<!doctype[^>]*>\s*)?<!--\r?\n([\s\S]*?)\r?\n-->/i);
+  return match && match[1] !== undefined ? parseMetaLines(match[1]) : {};
 }
 
 const decks: Deck[] = slideFiles.map((file) => {
@@ -393,7 +410,222 @@ if (decks.length > 0) {
 }
 
 // ---------------------------------------------------------------------------
-// 5. ギャラリーのコピーと画像収集
+// 5. HTML ページ（htmls/*.html）のビルド
+// ---------------------------------------------------------------------------
+
+interface HtmlPage {
+  base: string;
+  title: string;
+  description: string;
+  date: string;
+  tags: string[];
+  /** src/content/authors/ のコレクション ID */
+  author: string;
+}
+
+/** OGP メタ等の属性値用エスケープ */
+function escapeAttr(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+/**
+ * HTML ページへ注入するビューワー連携 + 閲覧数カウンターのスクリプト。
+ * 原稿は self-contained な単一 HTML でバンドラを通らないためインラインで持つ。
+ *
+ * - 直接アクセス時（非埋め込み）: セッション初回のみ POST /api/views/:base で +1
+ *   （スライド・記事と同じ水増し抑止。キー接頭辞も合わせる）
+ * - ビューワー（/htmls/<base>/ の iframe）埋め込み時:
+ *   - 本文の高さを postMessage で親へ通知し、親が iframe の高さを合わせる
+ *     （iframe 内スクロールを作らず、ページ全体を親のスクロールで読ませる）
+ *   - 外部リンクは iframe 内で開かず新しいタブで開く
+ *   - ページ内アンカーは親側のスクロールへ変換する（iframe は全高なので自身では動けない）
+ *   - 閲覧数はビューワー側（trackArticleView）が計測するため、ここでは POST しない
+ */
+function htmlBridgeScript(base: string): string {
+  return `<script>/* ZENSHIN ビューワー連携 + 閲覧数カウンター（scripts/build-slides.ts が注入） */
+(function () {
+  var BASE = ${JSON.stringify(base)};
+  var ORIGIN = location.origin;
+  var embedded = window.self !== window.top;
+
+  if (!embedded) {
+    if (!/^https?:$/.test(location.protocol)) return;
+    try {
+      var key = "blog-viewed:" + BASE;
+      if (sessionStorage.getItem(key) === "1") return;
+      fetch("/api/views/" + BASE, { method: "POST" }).then(function (res) {
+        if (res.ok) sessionStorage.setItem(key, "1");
+      }).catch(function () {});
+    } catch (e) {}
+    return;
+  }
+
+  var lastHeight = 0;
+  function send() {
+    // scrollHeight は iframe のビューポート高でクランプされ、親が iframe を
+    // 大きくすると追随して戻らなくなる（ラチェット）。レイアウト上の実コンテンツ高
+    // （html 要素のボックス高）を使い、縮む方向にも追随させる
+    var height = Math.ceil(document.documentElement.getBoundingClientRect().height);
+    if (Math.abs(height - lastHeight) < 2) return;
+    lastHeight = height;
+    parent.postMessage({ type: "zenshin-html-height", height: height }, ORIGIN);
+  }
+  if (typeof ResizeObserver === "function") {
+    var observer = new ResizeObserver(send);
+    observer.observe(document.documentElement);
+    if (document.body) observer.observe(document.body);
+  }
+  window.addEventListener("load", send);
+  send();
+
+  document.addEventListener("click", function (e) {
+    var target = e.target instanceof Element ? e.target.closest("a[href]") : null;
+    if (!target) return;
+    var url = new URL(target.getAttribute("href"), location.href);
+    if (url.origin !== ORIGIN) {
+      // 外部リンクは iframe の中で遷移させない
+      target.target = "_blank";
+      target.rel = "noopener noreferrer";
+      return;
+    }
+    if (url.pathname === location.pathname && url.hash) {
+      // ページ内アンカー — iframe は全高で自分ではスクロールできないため親に頼む
+      var dest = document.getElementById(decodeURIComponent(url.hash.slice(1)));
+      if (dest) {
+        e.preventDefault();
+        parent.postMessage({
+          type: "zenshin-html-scroll",
+          top: dest.getBoundingClientRect().top + window.scrollY
+        }, ORIGIN);
+      }
+    }
+  }, true);
+})();
+</script>`;
+}
+
+const htmlFiles = fs.existsSync(HTMLS_DIR)
+  ? fs
+      .readdirSync(HTMLS_DIR)
+      .filter((f) => f.endsWith(".html") && !f.startsWith("."))
+      .sort()
+      .reverse()
+  : [];
+
+const htmlPages: HtmlPage[] = htmlFiles.map((file) => {
+  const base = file.replace(/\.html$/, "");
+  const html = fs.readFileSync(path.join(HTMLS_DIR, file), "utf8");
+  const meta = parseHtmlMeta(html);
+  const dateMatch = base.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return {
+    base,
+    title: meta["title"] ?? "",
+    description: meta["description"] ?? "",
+    date: dateMatch ? `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}` : "",
+    tags: parseTags(meta["tags"]),
+    author: meta["author"] ?? DEFAULT_AUTHOR_ID,
+  };
+});
+
+// メタ検証（スライドと同じ基準: title 幅・タグ 5〜6 個・著者の実在。加えて日付プレフィックス必須）
+for (const page of htmlPages) {
+  const fail = (message: string): never => {
+    console.error(`htmls/${page.base}.html: ${message}`);
+    return process.exit(1);
+  };
+  if (!page.date) fail("ファイル名は YYYY-MM-DD-<slug>.html 形式にしてください");
+  if (!page.title) fail("先頭の HTML コメントメタに title が必要です（<!--\\ntitle: ...\\n-->）");
+  if (!page.description) fail("先頭の HTML コメントメタに description が必要です");
+  const error = validateTitleWidth(page.title);
+  if (error) fail(error);
+  if (page.tags.length < 5 || page.tags.length > 6) {
+    fail(`tags は 5〜6 個必須です（現在 ${page.tags.length} 個）`);
+  }
+  loadAuthor(page.author); // 実在しない著者 ID はここで throw する
+}
+
+if (htmlPages.length > 0) {
+  console.log("Building HTML page OG images...");
+  for (const page of htmlPages) {
+    const png = await renderOgImage({
+      label: "HTML資料 | 株式会社ZENSHIN",
+      title: page.title,
+      author: loadAuthor(page.author),
+      date: page.date.replaceAll("-", "."),
+    });
+    fs.writeFileSync(path.join(PUBLIC, "htmls", `${page.base}-og.png`), png);
+  }
+
+  // OGP メタ（正規 URL はビューワーページ）+ ビューワー連携スクリプトを注入して public へ出力
+  console.log("Building HTML pages...");
+  for (const page of htmlPages) {
+    const sourcePath = path.join(HTMLS_DIR, `${page.base}.html`);
+    const outPath = path.join(PUBLIC, "htmls", `${page.base}.html`);
+    const viewerUrl = `${SITE_ORIGIN}/htmls/${page.base}/`;
+    const html = fs.readFileSync(sourcePath, "utf8");
+    if (!html.includes("</head>") || !html.includes("</body>")) {
+      throw new Error(`htmls/${page.base}.html: </head> / </body> が見つからずビューワー連携を注入できません`);
+    }
+    if (!/<title[\s>]/i.test(html)) {
+      throw new Error(`htmls/${page.base}.html: <title> がありません（原稿の <head> に入れてください）`);
+    }
+    const headExtra = [
+      `<link rel="canonical" href="${viewerUrl}">`,
+      `<meta property="og:type" content="article">`,
+      `<meta property="og:title" content="${escapeAttr(page.title)}">`,
+      ...(page.description
+        ? [`<meta property="og:description" content="${escapeAttr(page.description)}">`]
+        : []),
+      `<meta property="og:url" content="${viewerUrl}">`,
+      `<meta property="og:image" content="${SITE_ORIGIN}/htmls/${page.base}-og.png">`,
+      `<meta name="twitter:card" content="summary_large_image">`,
+    ].join("");
+    fs.writeFileSync(
+      outPath,
+      html
+        .replace("</head>", `${headExtra}</head>`)
+        .replace("</body>", `${htmlBridgeScript(page.base)}</body>`),
+    );
+  }
+
+  // サムネイル（1280x720 の先頭ビュー。スライドのサムネと同アスペクト）。
+  // ルート相対参照（/gallery/... 等）を解決するため、public/ を一時 HTTP サーバで配信して撮る
+  console.log("Building HTML page thumbnails...");
+  const server = Bun.serve({
+    port: 0,
+    async fetch(request) {
+      const pathname = decodeURIComponent(new URL(request.url).pathname);
+      const filePath = path.join(PUBLIC, path.normalize(pathname).replace(/^([/\\])+/, ""));
+      if (!filePath.startsWith(PUBLIC)) return new Response("Forbidden", { status: 403 });
+      const bunFile = Bun.file(filePath);
+      return (await bunFile.exists()) ? new Response(bunFile) : new Response("Not Found", { status: 404 });
+    },
+  });
+  const executablePath = process.env["PUPPETEER_EXECUTABLE_PATH"];
+  const browser = await puppeteer.launch(
+    executablePath ? { executablePath } : { channel: "chrome" },
+  );
+  try {
+    const browserPage = await browser.newPage();
+    await browserPage.setViewport({ width: 1280, height: 720 });
+    for (const page of htmlPages) {
+      const url = `http://localhost:${server.port}/htmls/${page.base}.html`;
+      await browserPage.goto(url, { waitUntil: "networkidle0", timeout: 15000 }).catch(() => {});
+      await browserPage.evaluate("document.fonts ? document.fonts.ready : null").catch(() => {});
+      await browserPage.screenshot({ path: path.join(PUBLIC, "htmls", `${page.base}.png`) });
+    }
+  } finally {
+    await browser.close();
+    server.stop(true);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 6. ギャラリーのコピーと画像収集
 // ---------------------------------------------------------------------------
 
 interface GalleryGroup {
@@ -429,7 +661,7 @@ for (const { group, files } of galleryGroups) {
 }
 
 // ---------------------------------------------------------------------------
-// 6. メタ情報を src/data/ へ出力（Astro 側のデータソース）
+// 7. メタ情報を src/data/ へ出力（Astro 側のデータソース）
 // ---------------------------------------------------------------------------
 
 const slidesData = decks.map((d) => ({
@@ -450,7 +682,27 @@ const slidesData = decks.map((d) => ({
 }));
 fs.writeFileSync(path.join(DATA_DIR, "slides.json"), `${JSON.stringify(slidesData, null, 2)}\n`);
 
-console.log(`Done: ${decks.length} deck(s), ${galleryGroups.length} gallery group(s) -> public/ + src/data/`);
+const htmlsData = htmlPages.map((p) => ({
+  id: p.base,
+  title: p.title,
+  description: p.description,
+  date: p.date,
+  tags: p.tags,
+  author: p.author,
+  urls: {
+    // page はビューワーページ（サイトの額縁 + 関連コンテンツ）。
+    // 原稿由来の素の HTML は /htmls/<id>.html で、ビューワーが iframe で埋め込む
+    page: `/htmls/${p.base}/`,
+    html: `/htmls/${p.base}.html`,
+    thumbnail: `/htmls/${p.base}.png`,
+    ogImage: `/htmls/${p.base}-og.png`,
+  },
+}));
+fs.writeFileSync(path.join(DATA_DIR, "htmls.json"), `${JSON.stringify(htmlsData, null, 2)}\n`);
+
+console.log(
+  `Done: ${decks.length} deck(s), ${htmlPages.length} html page(s), ${galleryGroups.length} gallery group(s) -> public/ + src/data/`,
+);
 
 // marp-cli の Node API が Chrome まわりのハンドルを残すことがあり、全処理後も
 // プロセスが終了せず CI が timeout-minutes まで待ち続ける（ローカル・Actions 双方で観測）。

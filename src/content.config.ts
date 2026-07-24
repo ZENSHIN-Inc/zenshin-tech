@@ -2,9 +2,11 @@
  * Content Collections の定義（Content Layer API）
  *
  * blog: 技術ブログ記事（zenshin-hp から移設）
- * authors: 記事・スライドの著者（zenshin-hp の members のサブセット）
+ * authors: 記事・スライド・HTML ページの著者（zenshin-hp の members のサブセット）
  * slides: Marp デッキのメタデータ。scripts/build-slides.ts が prebuild 時に
  *         src/data/slides.json へ書き出したものを file ローダーで読む
+ * htmls: HTML ページ（htmls/ 配下の self-contained な原稿）のメタデータ。
+ *        slides と同じく prebuild が src/data/htmls.json へ書き出す
  */
 import { defineCollection, reference } from "astro:content";
 import { z } from "astro/zod";
@@ -68,4 +70,23 @@ const slides = defineCollection({
   }),
 });
 
-export const collections = { blog, authors, slides };
+const htmls = defineCollection({
+  loader: file("src/data/htmls.json"),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    date: z.coerce.date(),
+    // タグはブログ・スライドと共通の概念（サイドバー・トップの絞り込みで合算集計する）。5〜6 個必須
+    tags: z.array(z.string()).min(5).max(6),
+    author: reference("authors"),
+    // すべてサイトルート相対パス（/htmls/...）。フィードや OGP では絶対 URL 化して使う
+    urls: z.object({
+      page: z.string(),
+      html: z.string(),
+      thumbnail: z.string(),
+      ogImage: z.string(),
+    }),
+  }),
+});
+
+export const collections = { blog, authors, slides, htmls };

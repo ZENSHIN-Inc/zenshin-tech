@@ -3,8 +3,9 @@ name: gallery-image-gen
 description: >
   gpt-image-2（Codex の組み込み image_gen・ChatGPT サブスクルート）で画像を生成し、
   このリポジトリの `gallery/<YYYYMM>-<slug>/` に置いて公開するスキル。
-  スライド挿絵・CG・アイキャッチなど用途を問わない「画像生成の共通エンジン」で、
-  スライドへの差し込みまで行う場合は姉妹スキル slide-infographic がこのスキルを呼び出す。
+  スライド挿絵・HTML ページ挿絵・CG・アイキャッチなど用途を問わない「画像生成の共通エンジン」で、
+  スライドへの差し込みは姉妹スキル slide-infographic が、HTML ページへの差し込みは
+  姉妹スキル zenshin-html がこのスキルを呼び出す。呼び出し規約・ハマりどころの正本はこのファイル。
   **Use this skill whenever the user mentions** 画像を作って / CG を作って / ギャラリーに画像を追加したい /
   gpt-image で生成したい / アイキャッチ・挿絵・イラストがほしい、と言ったとき。
 ---
@@ -17,9 +18,7 @@ description: >
 
 - 置き場所: `gallery/<YYYYMM>-<slug>/<ファイル名>.png`（`gallery/` 直下に直接置かない。1 案件・1 テーマにつき 1 フォルダ）
 - フォルダ名は「年月 + 内容がわかる英語ケバブケーススラッグ」（例: `202607-ai-seminar/`）
-- 公開 URL（main に push 後）:
-  - 一覧: https://tech.zenshin-inc.co.jp/gallery/
-  - 直リンク: `https://tech.zenshin-inc.co.jp/gallery/<フォルダ名>/<ファイル名>`
+- 公開 URL（main に push 後）: `https://tech.zenshin-inc.co.jp/gallery/<フォルダ名>/<ファイル名>`（公開一覧ページはない。スライド・HTML ページ等からの参照用）
 - サイズ目安: 1 ファイル 5MB 以下・長辺 2400px 以下（gpt-image-2 の 1536x1024 / 1024x1536 なら通常問題ない）
 - **push = 社外公開**。commit / push はユーザーの明示指示があるまでしない（リポジトリ運用方針）。push 前に「公開されます」を一言添える
 
